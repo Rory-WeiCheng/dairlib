@@ -48,3 +48,15 @@ py_binary(
     data = [":trifinger_urdf",
             "@drake//manipulation/models/franka_description:models"],
 )
+
+py_binary(
+    name = "lcs_basics",
+    srcs = ["lcs_basics.py"],
+    deps = [
+        "//bindings/pydairlib",
+        "@drake//bindings/pydrake",
+        "//examples/franka_trajectory_following/scripts:franka_logging_utils_test",
+    ],
+    data = [":trifinger_urdf",
+            "@drake//manipulation/models/franka_description:models"],
+)

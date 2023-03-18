@@ -79,7 +79,10 @@ def main():
     import numpy as np
     import scipy.io
 
-    logfile = "/home/alpaydinoglu/workspace/dairlib/example_log"
+    # Wei-Cheng: 2023.1.31 modified local path to test the data recording
+    logfile = "/usr/rory-workspace/data/experiment_logs/2023/02_06_23/00/lcmlog-00"
+    # logfile = "/home/alpaydinoglu/workspace/dairlib/example_log"
+
     log = lcm.EventLog(logfile, "r")
     # print_log_summary(logfile, log)
     x, y = get_log_data(log, channels, -1, processing_callback, "FRANKA_OUTPUT")

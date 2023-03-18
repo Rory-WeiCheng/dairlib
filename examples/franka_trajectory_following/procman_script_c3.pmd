@@ -71,7 +71,7 @@ group "6.[HW] Franka Computer" {
 
 group "7.[SIM] C3" {
     cmd "a.[SIM] C3" {
-        exec = "bazel-bin/examples/franka_trajectory_following/lcm_control_demo --TTL 1";
+        exec = "bazel-bin/examples/franka_trajectory_following/lcm_control_demo --TTL 0";
         host = "localhost";
     }
     cmd "b.[SIM] franka" {
@@ -83,7 +83,7 @@ group "7.[SIM] C3" {
         host = "localhost";
     }
     cmd "d.[SIM]run_state_estimator" {
-        exec = "bazel-bin/examples/franka_trajectory_following/run_state_estimator --TTL 1";
+        exec = "bazel-bin/examples/franka_trajectory_following/run_state_estimator --TTL 0";
         host = "localhost";
     }
     cmd "e.[SIM] sim visualizer" {
@@ -98,7 +98,7 @@ group "7.[SIM] C3" {
 
 group "8.Logging, Utils" {
     cmd "a.start_logging" {
-        exec = "bazel-bin/examples/franka_trajectory_following/scripts/start_logging";
+        exec = "bazel-bin/examples/franka_trajectory_following/scripts/start_logging_test";
         host = "localhost";
     }
     cmd "b.start_filming" {
@@ -106,7 +106,7 @@ group "8.Logging, Utils" {
         host = "localhost";
     }
     cmd "c.process_logs" {
-        exec = "bazel-bin/bindings/pydairlib/analysis/log_plotter_franka";
+        exec = "bazel-bin/bindings/pydairlib/analysis/process_lcm_log_test";
         host = "localhost";
     }
     cmd "d.process_frames" {
@@ -115,6 +115,10 @@ group "8.Logging, Utils" {
     }
     cmd "e.update_urdf" {
         exec = "bazel-bin/examples/franka_trajectory_following/scripts/update_urdfs";
+        host = "localhost";
+    }
+    cmd "f.end_logs" {
+        exec = "bazel-bin/examples/franka_trajectory_following/scripts/end_logging_test";
         host = "localhost";
     }
 }

@@ -19,9 +19,9 @@ from matplotlib.patches import Rectangle
 
 import scipy.io
 
-
+DAIR_PATH = "/usr/rory-workspace/dairlib"
 #DAIR_PATH = "/home/dair-manipulation/adam_ws/dairlib"
-DAIR_PATH = "/home/alpaydinoglu/workspace/dairlib"
+#DAIR_PATH = "/home/alpaydinoglu/workspace/dairlib"
 plot_dpi = 1000
 
 def check_flag_and_save(ps, filename, format='svg', save_flag=False):

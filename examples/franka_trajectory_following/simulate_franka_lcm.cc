@@ -12,6 +12,10 @@
 #include <drake/lcm/drake_lcm.h>
 #include <drake/multibody/tree/multibody_element.h>
 #include <drake/multibody/parsing/parser.h>
+
+// 2022 2.12 for contact output
+#include <drake/multibody/plant/contact_results_to_lcm.h>
+
 #include <drake/common/trajectories/piecewise_polynomial.h>
 #include <drake/geometry/drake_visualizer.h>
 #include <drake/math/rigid_transform.h>
@@ -36,6 +40,8 @@ namespace dairlib {
 using drake::geometry::SceneGraph;
 using drake::multibody::MultibodyPlant;
 using drake::multibody::AddMultibodyPlantSceneGraph;
+// 2022 2.12 for contact output
+using drake::multibody::ConnectContactResultsToDrakeVisualizer;
 using drake::math::RigidTransform;
 using drake::systems::DiagramBuilder;
 using drake::systems::lcm::LcmPublisherSystem;
@@ -99,6 +105,9 @@ int DoMain(int argc, char* argv[]){
   builder.Connect(plant.get_state_output_port(), mux->get_input_port(0));
   builder.Connect(passthrough->get_output_port(), mux->get_input_port(1));
   builder.Connect(mux->get_output_port(0), logger->get_input_port(0));
+
+  //2023.2.12 try to connect contact
+  ConnectContactResultsToDrakeVisualizer(&builder, plant, scene_graph, &drake_lcm, output_dt);
 
   auto diagram = builder.Build();
   // DrawAndSaveDiagramGraph(*diagram, "examples/franka_trajectory_following/diagram_simulate_franka_lcm");
