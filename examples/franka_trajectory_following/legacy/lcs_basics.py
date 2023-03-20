@@ -12,39 +12,13 @@ from pydrake.autodiffutils import InitializeAutoDiff,AutoDiffXd,ExtractGradient,
 import pydairlib.common
 import numpy as np
 from examples.franka_trajectory_following.scripts.franka_logging_utils_test import get_most_recent_logs
-
-
 import time
+
+
 start_time = time.time()
 # load parameters
 param = yaml_load(
     filename="examples/franka_trajectory_following/parameters.yaml")
-
-'''
-##################################### basic plant ###################################################
-# initialize Multibody Plant: plant
-plant = MultibodyPlant(0.0)
-
-# The package addition here seems necessary due to how the URDF is defined
-# Parser the robot file into plant: parser
-parser = Parser(plant)
-parser.package_map().Add("robot_properties_fingers",
-                         "examples/franka_trajectory_following/robot_properties_fingers")
-# load the end effector (finger only) urdf
-parser.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
-    "examples/franka_trajectory_following/robot_properties_fingers/urdf/trifinger_minimal_collision_2.urdf"))
-# load the ball urdf
-parser.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
-    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere.urdf"))
-
-# Fix the base of the finger to the world and finalize the plant
-X_WI = RigidTransform.Identity()
-plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("base_link"), X_WI)
-plant.Finalize()
-
-# initialize the diagram builder: builder
-builder = DiagramBuilder()
-'''
 
 ####################################### plant_f， simplified model ###########################################
 # initialize the diagram builder: builder_f
@@ -113,7 +87,7 @@ context_franka = diagram_franka.GetMutableSubsystemContext(plant_franka, diagram
 
 ##################################### all plants definition ends ###############################################
 
-#### Start from here #####
+#### Start from here, doing FK simulation and get data #####
 # This python script is used to get the robot-related properties from drake so that we can form the matrices for learning, mainly refer to lcs_factory_franka.cc
 
 # load the data
@@ -142,6 +116,8 @@ F_list = []
 H_list = []
 c_list = []
 N_list = []
+x_list = []
+x_model_list = []
 
 # sample dt is 0.01, so for sim_dt=1e-4, sample every 100 points
 for i in range(1,len(timestamp_state),100):
@@ -250,9 +226,17 @@ for i in range(1,len(timestamp_state),100):
     H_list.append(H)
     c_list.append(c)
 
-print(len(A_list))
+    x_model = System.Simulate(state,u)
+    x_list.append(state)
+    x_model_list.append(x_model)
+
+x_model_all = np.array(x_model_list)
+x_all = np.array(x_list)
+residual = x_all[1:]-x_model_all[:-1]
 end_time = time.time()
 print("time used: {:.2f} s".format(end_time - start_time))
+
+
 # print("creating matrices npz files")
 # mdic_contact ={"A_lcs":A,"B_lcs":B}
 # npz_file = "{}/{}/Matrices-{}.npz".format(logdir, log_num, log_num)

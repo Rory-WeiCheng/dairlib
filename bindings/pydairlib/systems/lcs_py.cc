@@ -33,7 +33,9 @@ PYBIND11_MODULE(lcs, m) {
       .def_readonly("F", &LCS::F_)
       .def_readonly("H", &LCS::H_)
       .def_readonly("c", &LCS::c_)
-      .def_readonly("N", &LCS::N_);
+      .def_readonly("N", &LCS::N_)
+      .def("Simulate", &LCS::Simulate,py::arg("x_init"), py::arg("input"));
+
 }
 }  // namespace pydairlib
 }  // namespace dairlib
