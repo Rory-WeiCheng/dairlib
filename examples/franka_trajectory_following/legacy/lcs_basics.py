@@ -1,40 +1,26 @@
-from pyexpat.model import XML_CQUANT_NONE
-from dairlib import (lcmt_robot_output, lcmt_robot_input, lcmt_c3)
 from pydrake.common.yaml import yaml_load
-import pydairlib.common
-import pydairlib.lcm
-from pydairlib.systems import (RobotC3Receiver, 
-                               RobotC3Sender,
-                               RobotOutputReceiver, RobotOutputSender,
-                               LcmOutputDrivenLoop, OutputVector,
-                               TimestampedVector,
-                               AddActuationRecieverAndStateSenderLcm)
 from pydrake.all import (AbstractValue, DiagramBuilder, DrakeLcm, LeafSystem,
                          MultibodyPlant, Parser, RigidTransform, Subscriber,
                          LcmPublisherSystem, TriggerType, AddMultibodyPlantSceneGraph,
                          LcmInterfaceSystem)
-#import pydairlib.common
-from pydairlib.multibody import (addFlatTerrain, makeNameToPositionsMap, makeNameToVelocitiesMap)
+from pydairlib.systems import (lcs,lcs_factory_franka_new)
 
 # newly added
 from pydrake.multibody.tree import JacobianWrtVariable,MultibodyForces_
 from pydrake.autodiffutils import InitializeAutoDiff,AutoDiffXd,ExtractGradient,ExtractValue
-from scipy.linalg import lu_factor, lu_solve
 
 import pydairlib.common
-from pydairlib.systems.controllers_franka import C3Controller_franka
 import numpy as np
-from pydrake.trajectories import PiecewisePolynomial
-import math
 from examples.franka_trajectory_following.scripts.franka_logging_utils_test import get_most_recent_logs
 
+
+import time
+start_time = time.time()
 # load parameters
 param = yaml_load(
     filename="examples/franka_trajectory_following/parameters.yaml")
 
-# initialize drake lcm
-lcm = DrakeLcm()
-
+'''
 ##################################### basic plant ###################################################
 # initialize Multibody Plant: plant
 plant = MultibodyPlant(0.0)
@@ -58,8 +44,9 @@ plant.Finalize()
 
 # initialize the diagram builder: builder
 builder = DiagramBuilder()
+'''
 
-####################################### scene(?) plant ###########################################
+####################################### plant_f， simplified model ###########################################
 # initialize the diagram builder: builder_f
 builder_f = DiagramBuilder()
 sim_dt = 1e-4
@@ -96,12 +83,12 @@ diagram_context = diagram_f.CreateDefaultContext()
 # define the whole diagram's context, returns a mutable reference to the subcontext that corresponds to the contained System subsystem.
 context_f = diagram_f.GetMutableSubsystemContext(plant_f, diagram_context)
 
-##################################### fanka(?) plant ###############################################
+##################################### plant_franka, full model  ###############################################
 
 # initialize the diagram builder: builder_franka
 builder_franka = DiagramBuilder()
 sim_dt = 1e-4
-output_dt = 1e-4
+sample_dt = 1e-2
 
 # Adds both MultibodyPlant: plant_franka and the SceneGraph: scene_graph, and wires them together.
 # this plant_f mainly is used contain the whole franka instead of simple end-effector
@@ -119,7 +106,10 @@ X_WI_franka = RigidTransform.Identity()
 plant_franka.WeldFrames(plant_franka.world_frame(), plant_franka.GetFrameByName("panda_link0"), X_WI_franka)
 plant_franka.Finalize()
 
-context_franka = plant_franka.CreateDefaultContext()
+# remember that AddMultibodyPlantSceneGraph actually adds both plant_f and scene_graph, and wires them together. So we need to build the diagram for the later use to get generalized acceleration
+diagram_franka = builder_franka.Build()
+diagram_context_franka = diagram_franka.CreateDefaultContext()
+context_franka = diagram_franka.GetMutableSubsystemContext(plant_franka, diagram_context_franka)
 
 ##################################### all plants definition ends ###############################################
 
@@ -145,8 +135,17 @@ data_contact_names = data_contact.files
 timestamp_state = data_stateinput['timestamp_state']
 A_list = []
 B_list = []
-for i in range(len(timestamp_state)):
-    # get position and velocities, in the future, fix the data logging to get shorter codes
+D_list = []
+d_list = []
+E_list = []
+F_list = []
+H_list = []
+c_list = []
+N_list = []
+
+# sample dt is 0.01, so for sim_dt=1e-4, sample every 100 points
+for i in range(1,len(timestamp_state),100):
+    # get position and velocities, in the future, fix the data logging in the future to get shorter and clearer codes
     position = []
     velocity = []
     position.append(data_stateinput['q'][:,i])
@@ -163,6 +162,9 @@ for i in range(len(timestamp_state)):
     # So we need to update the franka context to do the FK
     plant_franka.SetPositions(context_franka,position)
     plant_franka.SetVelocities(context_franka,velocity)
+    # write my own set input function (equivalent to SetInputsIfNew in c++)
+    if (not plant_franka.get_actuation_input_port().HasValue(context_franka)) or (not (effort == plant_franka.get_actuation_input_port().Eval(context_franka)).all()):
+        plant_franka.get_actuation_input_port().FixValue(context_franka, effort)
 
     # end effector offset
     ee_offset = np.array(param["EE_offset"])
@@ -176,8 +178,16 @@ for i in range(len(timestamp_state)):
     ee_frame = plant_franka.GetBodyByName("panda_link10").body_frame()
     world_frame = plant_franka.world_frame()
     J_wee = plant_franka.CalcJacobianSpatialVelocity(context_franka,JacobianWrtVariable.kV,ee_frame,ee_offset,world_frame,world_frame)
+    # extract the franka part since the whole model also includes the ball
     J_franka = J_wee[:6,:7]
     v_ee = (J_franka @ velocity[0:7])[-3:]
+
+    # calculate the end-effector velocity a_ee, first we need to get the generalized acceleration vdot and spatical acceleration bias Jdotv
+    # extract the franka part since the whole model also includes the ball
+    vdot = plant_franka.get_generalized_acceleration_output_port().Eval(context_franka)
+    vdot_franka = vdot[0:7]
+    Jdotv_ee = plant_franka.CalcBiasSpatialAcceleration(context_franka,JacobianWrtVariable.kV,ee_frame,ee_offset,world_frame,world_frame)
+    a_ee = (J_franka @ vdot_franka)[-3:] + Jdotv_ee.translational()
 
     # get ball pose and (angular) velocity + position and translation velocity
     q_b = position[-7:]
@@ -185,15 +195,17 @@ for i in range(len(timestamp_state)):
     p_b = position[-3:]
     v_bT = position[-3:]
 
-    # assemble end effector info and ball info to form the configuration q and velocity v needed for lcs, also, initialize the input u to be 0
+    # assemble end effector info and ball info to form the configuration q and velocity v (state) for the simplified model, also, initialize the input u to be 0
     q = np.concatenate([p_ee, q_b])
     v = np.concatenate([v_ee, v_b])
     state = np.concatenate([q,v])
-    u = np.zeros(3)
+    # mass of the end-effector, originally is 0.01, should be tuned.
+    m_ee = 0.01
+    u = a_ee * m_ee
     xu = np.concatenate([state,u])
 
-    # set the state and input: xu to autodiff type and set simple model's context
-    # note that for simple model, only end-effector and ball, so num_position = 10 (3T for ee and 4R+3T for ball), num_velocity = 9 (3T for ee and 3R+3T for ball)
+    # set the state and input for the simplified model: xu to autodiff type and set simplified model's context
+    # note that for simplified model, only end-effector and ball, so num_position = 10 (3T for ee and 4R+3T for ball), num_velocity = 9 (3T for ee and 3R+3T for ball)
     xu_ad = InitializeAutoDiff(xu)
     plant_ad_f.SetPositionsAndVelocities(context_ad_f,xu_ad[0:plant_ad_f.num_positions()+plant_ad_f.num_velocities()])
 
@@ -213,68 +225,38 @@ for i in range(len(timestamp_state)):
     ground_geoms = plant_f.GetCollisionGeometriesForBody(plant_f.GetBodyByName("box"))[0]
 
     contact_geoms = [finger_lower_link_0_geoms, sphere_geoms, ground_geoms]
+    num_friction_directions = 2
+    mu = float(param["mu"])
 
+    # The return of the lcs_franka_new includes the system matrices and
+    # System_Matrix, System_Vector, Scaling = lcs_factory_franka_new.LinearizePlantToLCS(plant_f,context_f,plant_ad_f,context_ad_f,contact_geoms,num_friction_directions,mu,sample_dt)
+    System, Scaling = lcs_factory_franka_new.LinearizePlantToLCS(plant_f,context_f,plant_ad_f,context_ad_f,contact_geoms,num_friction_directions,mu,sample_dt)
 
-    '''
-    ## old methhod, now switch to using the c++ bindings
-    ## Start doing LCS
-    dt = 0.1
-    # extract the bias term C(q,v)*v
-    Cv = plant_ad_f.CalcBiasTerm(context_ad_f)
-    # derive the input term B*u
-    Bu = plant_ad_f.MakeActuationMatrix() @ plant_ad_f.get_actuation_input_port().Eval(context_ad_f)
-
-    # number of states, n_pos = n_state in c++, n_state = n_total in c++
-    n_pos = plant_ad_f.num_positions()
-    n_vel = plant_ad_f.num_velocities()
-    n_state = n_pos + n_vel
-    n_input = plant_ad_f.num_actuators()
-
-    # derive the gravity generalized force
-    tau_g = plant_ad_f.CalcGravityGeneralizedForces(context_ad_f)
-    # derive rigid body forces and mass matrix
-    f_app = MultibodyForces_(plant_ad_f)
-    plant_ad_f.CalcForceElementsContribution(context_ad_f, f_app)
-    M = plant_ad_f.CalcMassMatrix(context_ad_f)
-    # calculate vdot_no_contact solve M*vdot_no_contact = tau_g + f_app.generalized_forces() + Bu - Cv, simply use 
-    # pydrake.autodiffutils.inv since scipy pakages LU solver can't deal with autodiff arguments (c++ code originally use ldlT solver)
-    vdot_no_contact = AutoDiffXd.inv(M) @ (tau_g + f_app.generalized_forces() + Bu - Cv)
-    # calculate qdot_no_contact using velocity to qdot
-    vel = plant_ad_f.get_state_output_port().Eval(context_ad_f)[-n_vel:]
-    qdot_no_contact = plant_ad_f.MapVelocityToQDot(context_ad_f,vel)
-    d_q = ExtractValue(qdot_no_contact)
-
-    ## get A,B matrices
-    # initialization
-    A = np.zeros((n_state,n_state))
-    B = np.zeros((n_state,n_input))
-    # intermediate blocks AB_q and AB_v
-    AB_q = ExtractGradient(qdot_no_contact)
-    Nq = AB_q[0:n_pos,n_pos:n_state]
-    AB_v = ExtractGradient(vdot_no_contact)
-    AB_v_q = AB_v[0:n_vel,0:n_pos ]
-    AB_v_v = AB_v[0:n_vel,n_pos:n_state]
-    AB_v_u = AB_v[0:n_vel,n_state:n_state+n_input]
-
-    # Derive A,B
-    A[0:n_pos, 0:n_pos] = np.eye(n_pos) + dt * dt * Nq @ AB_v_q
-    A[0:n_pos, n_pos:n_state] = dt * Nq + dt * dt * Nq @ AB_v_v
-    A[n_pos:n_state, 0:n_pos] = dt * AB_v_q
-    A[n_pos:n_state, n_pos:n_state] = dt * AB_v_v + np.eye(n_vel)
-
-    B[0:n_pos, 0:n_input] = dt * dt * Nq @ AB_v_u
-    B[n_pos:n_state, 0:n_input] = dt * AB_v_u
+    A = System.A[0]
+    B = System.B[0]
+    D = System.D[0]
+    d = System.d[0]
+    E = System.E[0]
+    F = System.F[0]
+    H = System.H[0]
+    c = System.c[0]
 
     A_list.append(A)
     B_list.append(B)
-    '''
+    D_list.append(D)
+    d_list.append(d)
+    E_list.append(E)
+    F_list.append(F)
+    H_list.append(H)
+    c_list.append(c)
 
-# print(A_list.shape)
-# print(B_list.shape)
-print("creating matrices npz files")
-mdic_contact ={"A_lcs":A,"B_lcs":B}
-npz_file = "{}/{}/Matrices-{}.npz".format(logdir, log_num, log_num)
-np.savez(npz_file, **mdic_contact)
+print(len(A_list))
+end_time = time.time()
+print("time used: {:.2f} s".format(end_time - start_time))
+# print("creating matrices npz files")
+# mdic_contact ={"A_lcs":A,"B_lcs":B}
+# npz_file = "{}/{}/Matrices-{}.npz".format(logdir, log_num, log_num)
+# np.savez(npz_file, **mdic_contact)
 
     # # for single step validation before doing lcs
     # if i == 2:
@@ -352,176 +334,3 @@ np.savez(npz_file, **mdic_contact)
     #
     # if i == 5:
     #     break
-
-
-'''
-# define constants, from plants (simple model, only ee and ball)
-# nq = 10 (ee: 3T, ball: 4R+3T), nv = 9 (ee: 3T, ball: 3R+3T), nu = 3 (ee acceleration)
-nq = plant.num_positions()
-nv = plant.num_velocities()
-nu = plant.num_actuators()
-nc = 2      # number of contacts
-
-# create name to position map, for simple model
-q = np.zeros((nq,1))
-q_map = makeNameToPositionsMap(plant)
-v_map = makeNameToVelocitiesMap(plant)
-
-# set finger initial configuration
-finger_init = param["q_init_finger"]
-q[0] = finger_init[0]
-q[1] = finger_init[1]
-q[2] = finger_init[2]
-
-# set ball initial condition
-ball_init = param["q_init_ball_c3"]
-q[q_map['base_qw']] = ball_init[0]
-q[q_map['base_qx']] = ball_init[1]
-q[q_map['base_qy']] = ball_init[2]
-q[q_map['base_qz']] = ball_init[3]
-q[q_map['base_x']] = ball_init[4]
-q[q_map['base_y']] = ball_init[5]
-q[q_map['base_z']] = ball_init[6]
-mu = param["mu"]
-'''
-'''
-# set weight matrix initial condition
-Qinit = param["Q_default"] * np.eye(nq+nv)
-Qinit[0,0] = param["Q_finger"]
-Qinit[1,1] = param["Q_finger"]
-Qinit[2,2] = param["Q_finger"]
-Qinit[7,7] = param["Q_ball_x"]
-Qinit[8,8] = param["Q_ball_y"]
-Qinit[10:10+nv,10:10+nv] = param["Q_ball_vel"] * np.eye(nv)
-Qinit[10:13,10:13] = param["Q_finger_vel"]*np.eye(3) #10
-# Qinit[13:16, 13:16] = 0*np.eye(3) # zero out cost on rotational velocity
-Rinit = param["R"] * np.eye(nu) #torques
-
-
-# set ADMM parameters
-Ginit = param["G"] * np.eye(nq+nv+nu+6*nc)
-Uinit = param["U_default"] * np.eye(nq+nv+nu+6*nc)
-Uinit[0:nq+nv,0:nq+nv] = param["U_pos_vel"] * np.eye(nq+nv) 
-Uinit[nq+nv+6*nc:nq+nv+nu+6*nc, nq+nv+6*nc:nq+nv+nu+6*nc] = param["U_u"] * np.eye(nu)
-
-# set desired state initial condition
-xdesiredinit = np.zeros((nq+nv,1))
-xdesiredinit[:nq] = q
-
-# set desired trak=jectory parameters
-r = param["traj_radius"]
-x_c = param["x_c"]
-y_c = param["y_c"]
-
-# set rolling related parameters
-degree_increment = param["degree_increment"]
-if param["hold_order"] == 0:
-    theta = np.arange(degree_increment, 400 + degree_increment, degree_increment)
-elif param["hold_order"] == 1:
-    theta = np.arange(0, 400, degree_increment)
-xtraj = []
-for i in theta:
-    x = r * np.sin(math.radians(i+param["phase"]))
-    y = r * np.cos(math.radians(i+param["phase"]))
-    # x = r * np.sin(math.radians(i+param["phase"]+90)) * np.cos(math.radians(i+param["phase"]+90))
-    # y = r * np.sin(math.radians(i+param["phase"]+90))
-    q[q_map['base_x']] = x + x_c
-    q[q_map['base_y']] = y + y_c
-    q[q_map['base_z']] = param["ball_radius"] + param["table_offset"]
-    xtraj_hold = np.zeros((nq+nv,1))
-    xtraj_hold[:nq] = q
-    xtraj.append(xtraj_hold)
-
-time_increment = 1.0*param["time_increment"]  # also try just moving in a straight line maybe
-delay = param["stabilize_time1"] + param["move_time"] + param["stabilize_time2"]
-timings = np.arange(delay, time_increment*len(xtraj) + delay, time_increment)
-
-if param["hold_order"] == 0:
-    pp = PiecewisePolynomial.ZeroOrderHold(timings, xtraj)
-elif param["hold_order"] == 1:
-    pp = PiecewisePolynomial.FirstOrderHold(timings, xtraj)
-
-
-num_friction_directions = 2
-N = 5
-Q = []
-R = []
-G = []
-U = []
-xdesired = []
-
-for i in range(N):
-    Q.append(Qinit)
-    R.append(Rinit)
-    G.append(Ginit)
-    U.append(Uinit)
-    xdesired.append(xdesiredinit)
-
-#Qinit[nv-3:nv,nv-3:nv] = 1*np.eye(3) #penalize final velocities
-Q.append(Qinit)
-xdesired.append(xdesiredinit)
-'''
-'''
-# set robot and contact geometries
-finger_lower_link_0_geoms = plant_f.GetCollisionGeometriesForBody(plant_f.GetBodyByName("tip_link_1_real"))[0]
-sphere_geoms = plant_f.GetCollisionGeometriesForBody(plant_f.GetBodyByName("sphere"))[0]
-ground_geoms = plant_f.GetCollisionGeometriesForBody(plant_f.GetBodyByName("box"))[0]
-
-contact_geoms = [finger_lower_link_0_geoms, sphere_geoms, ground_geoms] #finger_lower_link_120_geoms, finger_lower_link_240_geoms,
-
-# create autodiff plant corresponding to plant to use the autodiff scalar type, with a dynamic-sized vector of partial derivatives: plant_ad
-plant_ad = plant.ToAutoDiffXd()
-context = plant.CreateDefaultContext()
-context_ad = plant_ad.CreateDefaultContext()
-
-# Given: every timestamps' x(q,v), u, find the corresponding
-
-controller = builder.AddSystem(
-    C3Controller_franka(plant, plant_f, plant_franka, context, context_f, context_franka, plant_ad, plant_ad_f, context_ad, context_ad_f, scene_graph, diagram_f, contact_geoms, num_friction_directions, mu, Q, R, G, U, xdesired, pp))
-'''
-
-'''
-# create state message receiver (check corresponding lcm type): from frank plant (full model)
-state_receiver = builder.AddSystem(RobotOutputReceiver(plant_franka))
-
-# create c3 controller (planning using simple model)
-controller = builder.AddSystem(
-    C3Controller_franka(plant, plant_f, plant_franka, context, context_f, context_franka, plant_ad, plant_ad_f, context_ad, context_ad_f, scene_graph, diagram_f, contact_geoms, num_friction_directions, mu, Q, R, G, U, xdesired, pp))
-
-# create control command sender (planning using simple model)
-state_force_sender = builder.AddSystem(RobotC3Sender(10, 9, 6, 9))
-
-# build the diagram: this builder is to connect all the subsystem, while builder_f build the plant_f and scene graph and builder_franka build the plant_franka and scenegraph_franka
-
-# controller receive the state from the franka robot
-builder.Connect(state_receiver.get_output_port(0), controller.get_input_port(0))
-
-# controller send control command to the state force sender
-builder.Connect(controller.get_output_port(), state_force_sender.get_input_port(0))
-
-# create control publisher, receive message from state force sender and publish it out
-control_publisher = builder.AddSystem(LcmPublisherSystem.Make(
-    channel="CONTROLLER_INPUT", lcm_type=lcmt_c3, lcm=lcm,
-    publish_triggers={TriggerType.kForced},
-    publish_period=0.0, use_cpp_serializer=True))
-builder.Connect(state_force_sender.get_output_port(),
-    control_publisher.get_input_port())
-
-# finish building the diagram
-diagram = builder.Build()
-
-# the context for the whole diagram
-context_d = diagram.CreateDefaultContext()
-
-# the context of the state receiver
-receiver_context = diagram.GetMutableSubsystemContext(state_receiver, context_d)
-
-# loop driven by lcm message
-loop = LcmOutputDrivenLoop(drake_lcm=lcm, diagram=diagram,
-                          lcm_parser=state_receiver,
-                          input_channel="FRANKA_OUTPUT",
-                          is_forced_publish=True)
-
-# simulate for 200s
-loop.Simulate(200)
-'''

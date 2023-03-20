@@ -26,7 +26,7 @@ using drake::systems::Context;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-std::pair<LCS,double> LCSFactoryFrankaNew::LinearizePlantToLCS(
+std::pair <LCS, double> LCSFactoryFrankaNew::LinearizePlantToLCS(
     const MultibodyPlant<double>& plant, const Context<double>& context,
     const MultibodyPlant<AutoDiffXd>& plant_ad,
     const Context<AutoDiffXd>& context_ad,
@@ -251,25 +251,31 @@ std::pair<LCS,double> LCSFactoryFrankaNew::LinearizePlantToLCS(
             2 * contact_geoms.size() * num_friction_directions) =
       J_t * dt * d_v;
 
-  int N = 5;
+//  int N = 5;
+  int N = 1;
 
   auto Dn = D.squaredNorm();
   auto An = A.squaredNorm();
+
+//  for data collecting, we don't want to scale the complementarity part
   auto AnDn = An / Dn;
 
   std::vector<MatrixXd> A_lcs(N, A);
   std::vector<MatrixXd> B_lcs(N, B);
-  std::vector<MatrixXd> D_lcs(N, D * AnDn);
-  std::vector<VectorXd> d_lcs(N, d );
-  std::vector<MatrixXd> E_lcs(N, E / AnDn);
+  std::vector<MatrixXd> D_lcs(N, D);
+//  std::vector<MatrixXd> D_lcs(N, D * AnDn);
+  std::vector<VectorXd> d_lcs(N, d);
+  std::vector<MatrixXd> E_lcs(N, E);
+//  std::vector<MatrixXd> E_lcs(N, E / AnDn);
   std::vector<MatrixXd> F_lcs(N, F);
-  std::vector<VectorXd> c_lcs(N, c / AnDn);
-  std::vector<MatrixXd> H_lcs(N, H / AnDn);
+  std::vector<VectorXd> c_lcs(N, c);
+//  std::vector<VectorXd> c_lcs(N, c / AnDn);
+  std::vector<MatrixXd> H_lcs(N, H);
+//  std::vector<MatrixXd> H_lcs(N, H / AnDn);
 
   LCS system(A_lcs, B_lcs, D_lcs, d_lcs, E_lcs, F_lcs, H_lcs, c_lcs);
 
   std::pair <LCS, double> ret (system, AnDn);
-
   return ret;
 
 }

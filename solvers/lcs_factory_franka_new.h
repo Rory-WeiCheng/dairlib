@@ -1,8 +1,12 @@
 #pragma once
 #include "solvers/lcs.h"
 
+
 namespace dairlib {
 namespace solvers {
+
+//using Eigen::MatrixXd;
+//using Eigen::VectorXd;
 
 class LCSFactoryFrankaNew {
  public:
@@ -23,7 +27,7 @@ class LCSFactoryFrankaNew {
   /// @param contact_geoms
   /// @param num_friction faces
   /// @param mu
-  static std::pair<LCS, double> LinearizePlantToLCS(
+  static std::pair <LCS, double> LinearizePlantToLCS(
       const drake::multibody::MultibodyPlant<double>& plant,
       const drake::systems::Context<double>& context,
       const drake::multibody::MultibodyPlant<drake::AutoDiffXd>& plant_ad,
