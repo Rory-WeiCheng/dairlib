@@ -26,7 +26,6 @@ builder_f = DiagramBuilder()
 sim_dt = 1e-4
 
 # Adds both MultibodyPlant: plant_f and the SceneGraph: scene_graph, and wires them together.
-# this plant_f mainly is used to do scene graph
 plant_f, scene_graph = AddMultibodyPlantSceneGraph(builder_f, 0.0)
 
 # The same as above, package addition
@@ -65,7 +64,7 @@ sim_dt = 1e-4
 sample_dt = 1e-2
 
 # Adds both MultibodyPlant: plant_franka and the SceneGraph: scene_graph, and wires them together.
-# this plant_f mainly is used contain the whole franka instead of simple end-effector
+# this plant_franka mainly is used contain the whole franka instead of simple end-effector
 plant_franka, scene_graph_franka = AddMultibodyPlantSceneGraph(builder_franka, sim_dt)
 
 # The same as above, package addition
@@ -80,7 +79,8 @@ X_WI_franka = RigidTransform.Identity()
 plant_franka.WeldFrames(plant_franka.world_frame(), plant_franka.GetFrameByName("panda_link0"), X_WI_franka)
 plant_franka.Finalize()
 
-# remember that AddMultibodyPlantSceneGraph actually adds both plant_f and scene_graph, and wires them together. So we need to build the diagram for the later use to get generalized acceleration
+# remember that AddMultibodyPlantSceneGraph actually adds both plant_f and scene_graph, and wires them together.
+# We need to build the diagram for the later use to get generalized acceleration
 diagram_franka = builder_franka.Build()
 diagram_context_franka = diagram_franka.CreateDefaultContext()
 context_franka = diagram_franka.GetMutableSubsystemContext(plant_franka, diagram_context_franka)
@@ -107,6 +107,8 @@ data_contact_names = data_contact.files
 # print(data_contact_names)
 
 timestamp_state = data_stateinput['timestamp_state']
+
+# create empty lists for saving the data
 A_list = []
 B_list = []
 D_list = []
@@ -119,7 +121,8 @@ N_list = []
 x_list = []
 x_model_list = []
 
-# sample dt is 0.01, so for sim_dt=1e-4, sample every 100 points
+# sample dt is 0.01, so for sim_dt=1e-4, roughly sample every 100 points
+# can be further improved to get the actually 0.01 interval using timestamp
 for i in range(1,len(timestamp_state),100):
     # get position and velocities, in the future, fix the data logging in the future to get shorter and clearer codes
     position = []
@@ -165,11 +168,9 @@ for i in range(1,len(timestamp_state),100):
     Jdotv_ee = plant_franka.CalcBiasSpatialAcceleration(context_franka,JacobianWrtVariable.kV,ee_frame,ee_offset,world_frame,world_frame)
     a_ee = (J_franka @ vdot_franka)[-3:] + Jdotv_ee.translational()
 
-    # get ball pose and (angular) velocity + position and translation velocity
+    # get ball pose and (angular) velocity
     q_b = position[-7:]
     v_b = velocity[-6:]
-    p_b = position[-3:]
-    v_bT = position[-3:]
 
     # assemble end effector info and ball info to form the configuration q and velocity v (state) for the simplified model, also, initialize the input u to be 0
     q = np.concatenate([p_ee, q_b])
@@ -177,6 +178,7 @@ for i in range(1,len(timestamp_state),100):
     state = np.concatenate([q,v])
     # mass of the end-effector, originally is 0.01, should be tuned.
     m_ee = 0.01
+    # the input force should be u = F = m_ee*a_ee
     u = a_ee * m_ee
     xu = np.concatenate([state,u])
 
@@ -199,15 +201,15 @@ for i in range(1,len(timestamp_state),100):
     finger_lower_link_0_geoms = plant_f.GetCollisionGeometriesForBody(plant_f.GetBodyByName("tip_link_1_real"))[0]
     sphere_geoms = plant_f.GetCollisionGeometriesForBody(plant_f.GetBodyByName("sphere"))[0]
     ground_geoms = plant_f.GetCollisionGeometriesForBody(plant_f.GetBodyByName("box"))[0]
-
     contact_geoms = [finger_lower_link_0_geoms, sphere_geoms, ground_geoms]
+    # frictional contact parameters
     num_friction_directions = 2
     mu = float(param["mu"])
 
-    # The return of the lcs_franka_new includes the system matrices and
-    # System_Matrix, System_Vector, Scaling = lcs_factory_franka_new.LinearizePlantToLCS(plant_f,context_f,plant_ad_f,context_ad_f,contact_geoms,num_friction_directions,mu,sample_dt)
+    # The return of the lcs_franka_new includes the system matrices and scaling (which is not used for now)
     System, Scaling = lcs_factory_franka_new.LinearizePlantToLCS(plant_f,context_f,plant_ad_f,context_ad_f,contact_geoms,num_friction_directions,mu,sample_dt)
 
+    # record the system matrices
     A = System.A[0]
     B = System.B[0]
     D = System.D[0]
@@ -226,24 +228,40 @@ for i in range(1,len(timestamp_state),100):
     H_list.append(H)
     c_list.append(c)
 
+    # simulate the lcs and record the next state predicted by the model, called x_model
     x_model = System.Simulate(state,u)
     x_list.append(state)
     x_model_list.append(x_model)
 
-x_model_all = np.array(x_model_list)
-x_all = np.array(x_list)
-residual = x_all[1:]-x_model_all[:-1]
+x_model_all = np.array(x_model_list).T
+x_all = np.array(x_list).T
+# calculate residual, except for the head and end
+residual = x_all[:,1:]-x_model_all[:,:-1]
+
+# record the time of executing the code
 end_time = time.time()
 print("time used: {:.2f} s".format(end_time - start_time))
 
+# save the data
+print("creating matrices npz files")
+mdic_contact ={"A_lcs":A_list,"B_lcs":B_list,"D_lcs":D_list,"d_lcs":d_list,"E_lcs":E_list,"F_lcs":F_list,"H_lcs":H_list,"c_lcs":c_list}
+npz_file = "{}/{}/LCS_Matrices-{}.npz".format(logdir, log_num, log_num)
+np.savez(npz_file, **mdic_contact)
+print("creating state and residual npz files")
+mdic_contact ={"state_plant":x_all[:,1:],"state_model":x_model_all[:,:-1],"residual":residual}
+npz_file = "{}/{}/State_Residual-{}.npz".format(logdir, log_num, log_num)
+np.savez(npz_file, **mdic_contact)
 
-# print("creating matrices npz files")
-# mdic_contact ={"A_lcs":A,"B_lcs":B}
-# npz_file = "{}/{}/Matrices-{}.npz".format(logdir, log_num, log_num)
-# np.savez(npz_file, **mdic_contact)
 
-    # # for single step validation before doing lcs
-    # if i == 2:
+# import matplotlib.pyplot as plt
+# # briefly check the result
+# for i in range(residual.shape[0]):
+#     plt.figure
+#     plt.plot(residual[i,:])
+#     plt.show()
+
+    # # for single step validation before doing lcs add this block in the loop
+    # if i == 5:
     #     # # validation print out the body names
     #     # link0 = plant_franka.GetBodyByName('panda_link10')
     #     # print(link0)
@@ -296,25 +314,4 @@ print("time used: {:.2f} s".format(end_time - start_time))
     #     # print(plant_f.GetPositions(context_f))
     #     # print(plant_f.GetVelocities(context_f))
     #     print("plant check pass")
-    #
-    # # for single step validation when doing lcs
-    # if i == 2:
-    #     ## check basic variables dimension
-    #     # print(contact_geoms)
-    #     # print(Cv)
-    #     # print(Bu)
-    #     # print(tau_g)
-    #     # print(vel)
-    #     # print(f_app)
-    #     # print(M)
-    #     # print(vdot_no_contact)
-    #     # print(qdot_no_contact)
-    #
-    #     ## check matrix dimension
-    #     # print(AB_q.shape)
-    #     # print(AB_v_u.shape)
-    #     # print(Nq.shape)
-    #     break
-    #
-    # if i == 5:
     #     break
