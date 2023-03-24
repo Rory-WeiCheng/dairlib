@@ -14,6 +14,7 @@ import numpy as np
 from examples.franka_trajectory_following.scripts.franka_logging_utils_test import get_most_recent_logs
 import time
 
+################################## TODO: modifying the urdf using scripts ###################################
 
 start_time = time.time()
 # load parameters
@@ -37,7 +38,7 @@ parser_f.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
     "examples/franka_trajectory_following/robot_properties_fingers/urdf/trifinger_minimal_collision_2.urdf"))
 # load the ball urdf
 parser_f.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
-    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere.urdf"))
+    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere_model.urdf"))
 
 # Fix the base of the finger to the world
 X_WI_f = RigidTransform.Identity()
@@ -72,7 +73,7 @@ parser_franka = Parser(plant_franka)
 parser_franka.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
     "examples/franka_trajectory_following/robot_properties_fingers/urdf/franka_box.urdf"))
 parser_franka.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
-    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere.urdf"))
+    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere_model.urdf"))
 
 # Fix the base of the franka robot to the world
 X_WI_franka = RigidTransform.Identity()
@@ -123,7 +124,7 @@ x_model_list = []
 
 # sample dt is 0.01, so for sim_dt=1e-4, roughly sample every 100 points
 # can be further improved to get the actually 0.01 interval using timestamp
-for i in range(1,len(timestamp_state)-150000,100):
+for i in range(1,len(timestamp_state)-200000,100):
     # get position and velocities, in the future, fix the data logging in the future to get shorter and clearer codes
     position = []
     velocity = []
@@ -260,8 +261,8 @@ import matplotlib.pyplot as plt
 # briefly check the result
 # ball position and velocity
 plt.figure(figsize = (24,16))
-plt.plot(x_all[16,:]*100, label='x velocity actual')
-plt.plot(x_model_all[16,:]*100, label='x velocity predicted')
+plt.plot(x_all[16,1:]*100, label='x velocity actual')
+plt.plot(x_model_all[16,:-1]*100, label='x velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -270,8 +271,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[17,:]*100, label='y velocity actual')
-plt.plot(x_model_all[17,:]*100, label='y velocity predicted')
+plt.plot(x_all[17,1:]*100, label='y velocity actual')
+plt.plot(x_model_all[17,:-1]*100, label='y velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -280,8 +281,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[9,:]*100, label='z position actual')
-plt.plot(x_model_all[9,:]*100, label='z position predicted')
+plt.plot(x_all[9,1:]*100, label='z position actual')
+plt.plot(x_model_all[9,:-1]*100, label='z position predicted')
 plt.ylabel("position (cm)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -290,8 +291,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[18,:]*100, label='z velocity actual')
-plt.plot(x_model_all[18,:]*100, label='z velocity predicted')
+plt.plot(x_all[18,1:]*100, label='z velocity actual')
+plt.plot(x_model_all[18,:-1]*100, label='z velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -311,8 +312,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-# plt.plot(residual[16,:]*100, label='x velocity residual')
-# plt.plot(residual[17,:]*100, label='y velocity residual')
+plt.plot(residual[16,:]*100, label='x velocity residual')
+plt.plot(residual[17,:]*100, label='y velocity residual')
 plt.plot(residual[18,:]*100, label='z velocity residual')
 plt.ylabel("velocity residual (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
@@ -323,8 +324,8 @@ plt.show()
 
 ## ee position
 plt.figure(figsize = (24,16))
-plt.plot(x_all[0,:]*100, label='x position actual')
-plt.plot(x_model_all[0,:]*100, label='x position predicted')
+plt.plot(x_all[0,1:]*100, label='x position actual')
+plt.plot(x_model_all[0,:-1]*100, label='x position predicted')
 plt.ylabel("position (cm)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -333,8 +334,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[1,:]*100, label='y position actual')
-plt.plot(x_model_all[1,:]*100, label='y position predicted')
+plt.plot(x_all[1,1:]*100, label='y position actual')
+plt.plot(x_model_all[1,:-1]*100, label='y position predicted')
 plt.ylabel("position (cm)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -343,8 +344,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[2,:]*100, label='z position actual')
-plt.plot(x_model_all[2,:]*100, label='z position predicted')
+plt.plot(x_all[2,1:]*100, label='z position actual')
+plt.plot(x_model_all[2,:-1]*100, label='z position predicted')
 plt.ylabel("position (cm)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -365,8 +366,8 @@ plt.show()
 
 ## ee velocity
 plt.figure(figsize = (24,16))
-plt.plot(x_all[10,:]*100, label='x velocity actual')
-plt.plot(x_model_all[10,:]*100, label='x velocity predicted')
+plt.plot(x_all[10,1:]*100, label='x velocity actual')
+plt.plot(x_model_all[10,:-1]*100, label='x velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -375,8 +376,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[11,:]*100, label='y velocity actual')
-plt.plot(x_model_all[11,:]*100, label='y velocity predicted')
+plt.plot(x_all[11,1:]*100, label='y velocity actual')
+plt.plot(x_model_all[11,:-1]*100, label='y velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -385,8 +386,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[12,:]*100, label='z velocity actual')
-plt.plot(x_model_all[12,:]*100, label='z velocity predicted')
+plt.plot(x_all[12,1:]*100, label='z velocity actual')
+plt.plot(x_model_all[12,:-1]*100, label='z velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)

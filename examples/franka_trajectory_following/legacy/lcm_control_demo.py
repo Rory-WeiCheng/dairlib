@@ -44,7 +44,7 @@ parser.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
 # parser.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
 #     "examples/trifinger_simple/robot_properties_fingers/cube/cube_v2.urdf"))
 parser.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
-    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere.urdf"))
+    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere_model.urdf"))
 
 
 #Fix the base of the finger to the world
@@ -72,7 +72,7 @@ parser_f.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
 # parser_f.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
 #     "examples/trifinger_simple/robot_properties_fingers/cube/cube_v2.urdf"))
 parser_f.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
-    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere.urdf"))
+    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere_model.urdf"))
 
 
 # Fix the base of the finger to the world
@@ -112,7 +112,7 @@ parser_franka = Parser(plant_franka)
 parser_franka.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
     "examples/franka_trajectory_following/robot_properties_fingers/urdf/franka_box.urdf"))
 parser_franka.AddModelFromFile(pydairlib.common.FindResourceOrThrow(
-    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere.urdf"))
+    "examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere_model.urdf"))
 
 
 
