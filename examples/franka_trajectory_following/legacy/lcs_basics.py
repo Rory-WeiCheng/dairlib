@@ -13,6 +13,7 @@ import pydairlib.common
 import numpy as np
 from examples.franka_trajectory_following.scripts.franka_logging_utils_test import get_most_recent_logs
 import time
+import pdb
 
 ################################## TODO: modifying the urdf using scripts ###################################
 
@@ -110,6 +111,22 @@ data_contact_names = data_contact.files
 timestamp_state = data_stateinput['timestamp_state']
 
 # create empty lists for saving the data
+# num_data = np.floor((len(timestamp_state)-150000)/100)
+# num_state = 19
+# num_comp = 12
+# num_input = 3
+# A_list = np.zeros(num_state,num_state,num_data)
+# B_list = np.zeros(num_state,num_input,num_data)
+# D_list = np.zeros(num_state,num_comp,num_data)
+# d_list = np.zeros(num_state,num_data)
+# E_list = np.zeros(num_comp,num_state,num_data)
+# F_list = np.zeros(num_comp,num_comp,num_data)
+# H_list = np.zeros(num_comp,num_input,num_data)
+# c_list = np.zeros(num_comp,num_data)
+# x_list = np.zeros(num_state,num_data)
+# x_model_list = np.zeros(num_state,num_data)
+
+# create empty lists for saving the data
 A_list = []
 B_list = []
 D_list = []
@@ -122,21 +139,30 @@ N_list = []
 x_list = []
 x_model_list = []
 
+# refer the data in advance to speed up the code
+q_joint = data_stateinput['q']
+R_b = data_stateinput['R_b']
+p_b = data_stateinput['p_b']
+q_joint_dot = data_stateinput['q_dot']
+w_b = data_stateinput['w_b']
+v_b_data = data_stateinput['v_b']
+u_data = data_stateinput['u']
+
 # sample dt is 0.01, so for sim_dt=1e-4, roughly sample every 100 points
 # can be further improved to get the actually 0.01 interval using timestamp
-for i in range(1,len(timestamp_state)-200000,100):
+for i in range(0,len(timestamp_state),100):
     # get position and velocities, in the future, fix the data logging in the future to get shorter and clearer codes
     position = []
     velocity = []
-    position.append(data_stateinput['q'][:,i])
-    position.append(data_stateinput['R_b'][:,i])
-    position.append(data_stateinput['p_b'][:,i])
+    position.append(q_joint[:,i])
+    position.append(R_b[:,i])
+    position.append(p_b[:,i])
     position = np.concatenate(position)
-    velocity.append(data_stateinput['q_dot'][:,i])
-    velocity.append(data_stateinput['w_b'][:, i])
-    velocity.append(data_stateinput['v_b'][:, i])
+    velocity.append(q_joint_dot[:,i])
+    velocity.append(w_b[:, i])
+    velocity.append(v_b_data[:, i])
     velocity = np.concatenate(velocity)
-    effort = data_stateinput['u'][:,i]
+    effort = u_data[:,i]
 
     # In order to get the LCS model, we need to know the position of the end-effector
     # So we need to update the franka context to do the FK
@@ -221,6 +247,8 @@ for i in range(1,len(timestamp_state)-200000,100):
     H = System.H[0]
     c = System.c[0]
 
+    # pdb.set_trace()
+
     A_list.append(A)
     B_list.append(B)
     D_list.append(D)
@@ -230,6 +258,7 @@ for i in range(1,len(timestamp_state)-200000,100):
     H_list.append(H)
     c_list.append(c)
 
+
     # simulate the lcs and record the next state predicted by the model, called x_model
     x_model = System.Simulate(state,u)
     x_list.append(state)
@@ -237,13 +266,14 @@ for i in range(1,len(timestamp_state)-200000,100):
 
 x_model_all = np.array(x_model_list).T
 x_all = np.array(x_list).T
+
 # calculate residual, except for the head and end
 residual = x_all[:,1:]-x_model_all[:,:-1]
 
 # record the time of executing the code
 end_time = time.time()
 print(len(x_model_list))
-# print("number of data: {} ").format(len(x_model_list))
+print("number of data: {} ".format(len(x_model_list)))
 print("time used: {:.2f} s".format(end_time - start_time))
 
 # save the data
@@ -256,7 +286,7 @@ mdic_contact ={"state_plant":x_all[:,1:],"state_model":x_model_all[:,:-1],"resid
 npz_file = "{}/{}/State_Residual-{}.npz".format(logdir, log_num, log_num)
 np.savez(npz_file, **mdic_contact)
 
-'''
+
 import matplotlib.pyplot as plt
 # briefly check the result
 # ball position and velocity
@@ -405,4 +435,3 @@ plt.legend(fontsize=20)
 plt.xticks(size = 20)
 plt.yticks(size = 20)
 plt.show()
-'''
