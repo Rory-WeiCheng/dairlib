@@ -111,22 +111,6 @@ data_contact_names = data_contact.files
 timestamp_state = data_stateinput['timestamp_state']
 
 # create empty lists for saving the data
-# num_data = np.floor((len(timestamp_state)-150000)/100)
-# num_state = 19
-# num_comp = 12
-# num_input = 3
-# A_list = np.zeros(num_state,num_state,num_data)
-# B_list = np.zeros(num_state,num_input,num_data)
-# D_list = np.zeros(num_state,num_comp,num_data)
-# d_list = np.zeros(num_state,num_data)
-# E_list = np.zeros(num_comp,num_state,num_data)
-# F_list = np.zeros(num_comp,num_comp,num_data)
-# H_list = np.zeros(num_comp,num_input,num_data)
-# c_list = np.zeros(num_comp,num_data)
-# x_list = np.zeros(num_state,num_data)
-# x_model_list = np.zeros(num_state,num_data)
-
-# create empty lists for saving the data
 A_list = []
 B_list = []
 D_list = []
@@ -286,7 +270,7 @@ mdic_contact ={"state_plant":x_all[:,1:],"state_model":x_model_all[:,:-1],"resid
 npz_file = "{}/{}/State_Residual-{}.npz".format(logdir, log_num, log_num)
 np.savez(npz_file, **mdic_contact)
 
-
+'''
 import matplotlib.pyplot as plt
 # briefly check the result
 # ball position and velocity
@@ -435,3 +419,4 @@ plt.legend(fontsize=20)
 plt.xticks(size = 20)
 plt.yticks(size = 20)
 plt.show()
+'''
