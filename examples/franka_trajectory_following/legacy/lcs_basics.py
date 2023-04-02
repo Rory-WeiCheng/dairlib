@@ -122,6 +122,12 @@ c_list = []
 N_list = []
 x_list = []
 x_model_list = []
+x_AB_list = []
+u_list = []
+
+# # check whether or not the F matrix is a P-matrix
+# F_check_list=[]
+# F_eigen_list=[]
 
 # refer the data in advance to speed up the code
 q_joint = data_stateinput['q']
@@ -134,7 +140,7 @@ u_data = data_stateinput['u']
 
 # sample dt is 0.01, so for sim_dt=1e-4, roughly sample every 100 points
 # can be further improved to get the actually 0.01 interval using timestamp
-for i in range(0,len(timestamp_state),100):
+for i in range(20000,30000,100):
     # get position and velocities, in the future, fix the data logging in the future to get shorter and clearer codes
     position = []
     velocity = []
@@ -231,7 +237,10 @@ for i in range(0,len(timestamp_state),100):
     H = System.H[0]
     c = System.c[0]
 
-    # pdb.set_trace()
+    # F_check = F + F.T
+    # F_pos = np.all(np.linalg.eigvals(F + F.T) > 0)
+    # F_eig = np.sort(np.linalg.eigvals(F + F.T))[0]
+
 
     A_list.append(A)
     B_list.append(B)
@@ -241,18 +250,28 @@ for i in range(0,len(timestamp_state),100):
     F_list.append(F)
     H_list.append(H)
     c_list.append(c)
+    # F_check_list.append(F_pos)
+    # F_eigen_list.append(F_eig)
 
 
     # simulate the lcs and record the next state predicted by the model, called x_model
     x_model = System.Simulate(state,u)
+    x_AB = A @ state + B @ u
     x_list.append(state)
+    u_list.append(u)
+    x_AB_list.append(x_AB)
     x_model_list.append(x_model)
 
-x_model_all = np.array(x_model_list).T
-x_all = np.array(x_list).T
+# array size: (num_data, num_dim)
+x_model_all = np.array(x_model_list)
+x_all = np.array(x_list)
+x_AB_all = np.array(x_AB_list)
+u_all = np.array(u_list)
+# F_check_all = np.array(F_check_list)
+# F_eigen_all = np.array(F_eigen_list)
 
 # calculate residual, except for the head and end
-residual = x_all[:,1:]-x_model_all[:,:-1]
+residual = x_all[1:,:]-x_AB_all[:-1,:]
 
 # record the time of executing the code
 end_time = time.time()
@@ -262,21 +281,25 @@ print("time used: {:.2f} s".format(end_time - start_time))
 
 # save the data
 print("creating matrices npz files")
-mdic_contact ={"A_lcs":A_list,"B_lcs":B_list,"D_lcs":D_list,"d_lcs":d_list,"E_lcs":E_list,"F_lcs":F_list,"H_lcs":H_list,"c_lcs":c_list}
+mdic_lcs ={"A_lcs":A_list,"B_lcs":B_list,"D_lcs":D_list,"d_lcs":d_list,"E_lcs":E_list,"F_lcs":F_list,"H_lcs":H_list,"c_lcs":c_list}
 npz_file = "{}/{}/LCS_Matrices-{}.npz".format(logdir, log_num, log_num)
-np.savez(npz_file, **mdic_contact)
+np.savez(npz_file, **mdic_lcs)
 print("creating state and residual npz files")
-mdic_contact ={"state_plant":x_all[:,1:],"state_model":x_model_all[:,:-1],"residual":residual}
+mdic_state_input ={"state_plant":x_all,"state_model_AB":x_AB_all,"state_model":x_model_all,"residual":residual,"input":u_all}
 npz_file = "{}/{}/State_Residual-{}.npz".format(logdir, log_num, log_num)
-np.savez(npz_file, **mdic_contact)
+np.savez(npz_file, **mdic_state_input)
 
-'''
+# np.set_printoptions(threshold=np.inf)
+# print(F_check_all)
+# print(F_eigen_all)
+# pdb.set_trace()
+
 import matplotlib.pyplot as plt
 # briefly check the result
 # ball position and velocity
 plt.figure(figsize = (24,16))
-plt.plot(x_all[16,1:]*100, label='x velocity actual')
-plt.plot(x_model_all[16,:-1]*100, label='x velocity predicted')
+plt.plot(x_all[1:,16]*100, label='x velocity actual')
+plt.plot(x_model_all[:-1,16]*100, label='x velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -285,8 +308,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[17,1:]*100, label='y velocity actual')
-plt.plot(x_model_all[17,:-1]*100, label='y velocity predicted')
+plt.plot(x_all[1:,17]*100, label='y velocity actual')
+plt.plot(x_model_all[:-1,17]*100, label='y velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -295,8 +318,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[9,1:]*100, label='z position actual')
-plt.plot(x_model_all[9,:-1]*100, label='z position predicted')
+plt.plot(x_all[1:,9]*100, label='z position actual')
+plt.plot(x_model_all[:-1,9]*100, label='z position predicted')
 plt.ylabel("position (cm)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -305,8 +328,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[18,1:]*100, label='z velocity actual')
-plt.plot(x_model_all[18,:-1]*100, label='z velocity predicted')
+plt.plot(x_all[1:,18]*100, label='z velocity actual')
+plt.plot(x_model_all[:-1,18]*100, label='z velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -315,9 +338,9 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(residual[7,:]*100, label='x position residual')
-plt.plot(residual[8,:]*100, label='y position residual')
-plt.plot(residual[9,:]*100, label='z position residual')
+plt.plot(residual[:,7]*100, label='x position residual')
+plt.plot(residual[:,8]*100, label='y position residual')
+plt.plot(residual[:,9]*100, label='z position residual')
 plt.ylabel("position residual (cm)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -326,9 +349,9 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(residual[16,:]*100, label='x velocity residual')
-plt.plot(residual[17,:]*100, label='y velocity residual')
-plt.plot(residual[18,:]*100, label='z velocity residual')
+plt.plot(residual[:,16]*100, label='x velocity residual')
+plt.plot(residual[:,17]*100, label='y velocity residual')
+plt.plot(residual[:,18]*100, label='z velocity residual')
 plt.ylabel("velocity residual (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -338,8 +361,8 @@ plt.show()
 
 ## ee position
 plt.figure(figsize = (24,16))
-plt.plot(x_all[0,1:]*100, label='x position actual')
-plt.plot(x_model_all[0,:-1]*100, label='x position predicted')
+plt.plot(x_all[1:,0]*100, label='x position actual')
+plt.plot(x_model_all[:-1,0]*100, label='x position predicted')
 plt.ylabel("position (cm)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -348,8 +371,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[1,1:]*100, label='y position actual')
-plt.plot(x_model_all[1,:-1]*100, label='y position predicted')
+plt.plot(x_all[1:,1]*100, label='y position actual')
+plt.plot(x_model_all[:-1,1]*100, label='y position predicted')
 plt.ylabel("position (cm)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -358,8 +381,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[2,1:]*100, label='z position actual')
-plt.plot(x_model_all[2,:-1]*100, label='z position predicted')
+plt.plot(x_all[1:,2]*100, label='z position actual')
+plt.plot(x_model_all[:-1,2]*100, label='z position predicted')
 plt.ylabel("position (cm)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -368,9 +391,9 @@ plt.yticks(size = 20)
 plt.show()
 #
 plt.figure(figsize = (24,16))
-plt.plot(residual[0,:]*100, label='x position residual')
-plt.plot(residual[1,:]*100, label='y position residual')
-plt.plot(residual[2,:]*100, label='z position residual')
+plt.plot(residual[:,0]*100, label='x position residual')
+plt.plot(residual[:,1]*100, label='y position residual')
+plt.plot(residual[:,2]*100, label='z position residual')
 plt.ylabel("position residual (cm)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -380,8 +403,8 @@ plt.show()
 
 ## ee velocity
 plt.figure(figsize = (24,16))
-plt.plot(x_all[10,1:]*100, label='x velocity actual')
-plt.plot(x_model_all[10,:-1]*100, label='x velocity predicted')
+plt.plot(x_all[1:,10]*100, label='x velocity actual')
+plt.plot(x_model_all[:-1,10]*100, label='x velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -390,8 +413,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[11,1:]*100, label='y velocity actual')
-plt.plot(x_model_all[11,:-1]*100, label='y velocity predicted')
+plt.plot(x_all[1:,11]*100, label='y velocity actual')
+plt.plot(x_model_all[:-1,11]*100, label='y velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -400,8 +423,8 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(x_all[12,1:]*100, label='z velocity actual')
-plt.plot(x_model_all[12,:-1]*100, label='z velocity predicted')
+plt.plot(x_all[1:,12]*100, label='z velocity actual')
+plt.plot(x_model_all[:-1,12]*100, label='z velocity predicted')
 plt.ylabel("velocity (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
@@ -410,13 +433,12 @@ plt.yticks(size = 20)
 plt.show()
 
 plt.figure(figsize = (24,16))
-plt.plot(residual[10,:]*100, label='x velocity residual')
-plt.plot(residual[11,:]*100, label='y velocity residual')
-plt.plot(residual[12,:]*100, label='z velocity residual')
+plt.plot(residual[:,10]*100, label='x velocity residual')
+plt.plot(residual[:,11]*100, label='y velocity residual')
+plt.plot(residual[:,12]*100, label='z velocity residual')
 plt.ylabel("velocity residual (cm/s)", fontsize=20)
 plt.xlabel("timestep k (every 0.01s)", fontsize=20)
 plt.legend(fontsize=20)
 plt.xticks(size = 20)
 plt.yticks(size = 20)
 plt.show()
-'''
