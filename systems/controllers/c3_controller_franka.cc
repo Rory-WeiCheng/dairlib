@@ -62,7 +62,9 @@ C3Controller_franka::C3Controller_franka(
     std::vector<drake::geometry::GeometryId> contact_geoms,
     int num_friction_directions, double mu, const vector<MatrixXd>& Q,
     const vector<MatrixXd>& R, const vector<MatrixXd>& G,
-    const vector<MatrixXd>& U, const vector<VectorXd>& xdesired, const drake::trajectories::PiecewisePolynomial<double>& pp)
+    const vector<MatrixXd>& U, const vector<VectorXd>& xdesired,
+    const drake::trajectories::PiecewisePolynomial<double>& pp,
+    solvers::LCS Res)
     : plant_(plant),
       plant_f_(plant_f),
       plant_franka_(plant_franka),
@@ -83,8 +85,9 @@ C3Controller_franka::C3Controller_franka(
       G_(G),
       U_(U),
       xdesired_(xdesired),
-      pp_(pp){
-
+      pp_(pp),
+      Res_(Res)
+      {
 
   // initialize warm start
   int time_horizon = 5;
@@ -384,7 +387,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
 
   auto system_scaling_pair = solvers::LCSFactoryFranka::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
-      num_friction_directions_, mu_, 0.1);
+      num_friction_directions_, mu_, 0.1, Res_);
 
   solvers::LCS system_ = system_scaling_pair.first;
   // double scaling = system_scaling_pair.second;
@@ -459,7 +462,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   ///calculate state and force
   auto system_scaling_pair2 = solvers::LCSFactoryFranka::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
-      num_friction_directions_, mu_, dt);
+      num_friction_directions_, mu_, dt, Res_);
 
   solvers::LCS system2_ = system_scaling_pair2.first;
   double scaling2 = system_scaling_pair2.second;

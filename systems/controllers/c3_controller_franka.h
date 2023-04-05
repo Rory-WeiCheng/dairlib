@@ -68,7 +68,8 @@ class C3Controller_franka : public LeafSystem<double> {
       const std::vector<Eigen::MatrixXd>& G,
       const std::vector<Eigen::MatrixXd>& U,
       const std::vector<Eigen::VectorXd>& xdesired,
-      const drake::trajectories::PiecewisePolynomial<double>& pp);
+      const drake::trajectories::PiecewisePolynomial<double>& pp,
+      solvers::LCS Res);
 
   const drake::systems::InputPort<double>& get_input_port_config() const {
     return this->get_input_port(state_input_port_);
@@ -110,6 +111,7 @@ class C3Controller_franka : public LeafSystem<double> {
   const std::vector<Eigen::MatrixXd> U_;
   const std::vector<Eigen::VectorXd> xdesired_;
   const drake::trajectories::PiecewisePolynomial<double> pp_;
+  solvers::LCS Res_;
   C3Parameters param_;
   std::map<string, int> q_map_franka_;
   std::map<string, int> v_map_franka_;

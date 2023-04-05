@@ -81,7 +81,8 @@ pybind_py_library(
         "//systems/controllers:c3_controller_franka",
     ],
     cc_so_name = "controllers_franka",
-    cc_srcs = ["controllers_franka_py.cc"],
+    cc_srcs = ["controllers_franka_py.cc",
+                "//solvers:lcs"],
     py_deps = [
         "@drake//bindings/pydrake",
         ":module_py",

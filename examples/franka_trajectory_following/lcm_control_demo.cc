@@ -27,6 +27,11 @@
 #include "systems/controllers/c3_controller_franka.h"
 #include "systems/framework/lcm_driven_loop.h"
 
+// add scv reading utils for reading the learnt lcs matrices and make lcs
+// just a rough way to incooperate learning part for sanity check
+#include "common/file_utils.h"
+#include "solvers/lcs.h"
+
 DEFINE_int32(TTL, 0,
               "TTL level for publisher. "
               "Default value is 0.");
@@ -48,6 +53,8 @@ using drake::trajectories::PiecewisePolynomial;
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
+using Eigen::Map;
+using solvers::LCS;
 
 int DoMain(int argc, char* argv[]){
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -298,14 +305,29 @@ int DoMain(int argc, char* argv[]){
   auto context_ad = plant_ad->CreateDefaultContext();
 
   auto state_receiver = builder.AddSystem<systems::RobotOutputReceiver>(plant_franka);
-  
+
+  /// load the matrices and create LCS object
+  MatrixXd A_res = readCSV("examples/franka_trajectory_following/parameters/A_res.csv");
+  MatrixXd B_res = readCSV("examples/franka_trajectory_following/parameters/B_res.csv");
+  MatrixXd D_res = readCSV("examples/franka_trajectory_following/parameters/D_res.csv");
+  MatrixXd d_res_m = readCSV("examples/franka_trajectory_following/parameters/d_res.csv");
+  VectorXd d_res = Map<VectorXd>(d_res_m.data(), d_res_m.cols()*d_res_m.rows());
+  MatrixXd E_res = readCSV("examples/franka_trajectory_following/parameters/E_res.csv");
+  MatrixXd F_res = readCSV("examples/franka_trajectory_following/parameters/F_res.csv");
+  MatrixXd H_res = readCSV("examples/franka_trajectory_following/parameters/H_res.csv");
+  MatrixXd c_res_m = readCSV("examples/franka_trajectory_following/parameters/c_res.csv");
+  VectorXd c_res = Map<VectorXd>(c_res_m.data(), c_res_m.cols()*c_res_m.rows());
+  int N_res = 1;
+  std::cout<< "(" << D_res.rows() << ", " << D_res.cols() << ")"<<std::endl;
+  LCS Res(A_res, B_res, D_res, d_res, E_res, F_res, H_res, c_res, N_res);
+
   auto controller = builder.AddSystem<systems::controllers::C3Controller_franka>(
                                   plant, plant_f, plant_franka, *context, 
                                   context_f, *context_franka, *plant_ad, 
                                   *plant_ad_f, *context_ad, *context_ad_f, 
                                   scene_graph, *diagram_f, contact_geoms, 
                                   num_friction_directions, mu, Q, R, G, U, 
-                                  xdesired, pp);
+                                  xdesired, pp, Res);
   auto state_force_sender = builder.AddSystem<systems::RobotC3Sender>(14, 9, 6, 9);
 
   builder.Connect(state_receiver->get_output_port(0), controller->get_input_port(0));    

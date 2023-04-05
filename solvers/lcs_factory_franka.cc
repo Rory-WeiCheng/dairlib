@@ -31,8 +31,7 @@ std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
     const MultibodyPlant<AutoDiffXd>& plant_ad,
     const Context<AutoDiffXd>& context_ad,
     const vector<SortedPair<GeometryId>>& contact_geoms,
-    int num_friction_directions, double mu, float dt) {
-
+    int num_friction_directions, double mu, float dt, LCS Res) {
 
 
   ///
@@ -243,6 +242,21 @@ std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
   c.segment(2 * contact_geoms.size(),
             2 * contact_geoms.size() * num_friction_directions) =
       J_t * dt * d_v;
+
+  /// add the residual part matrices here
+  MatrixXd Res_A = Res.A_[0];
+  MatrixXd Res_B = Res.B_[0];
+  MatrixXd Res_d = Res.d_[0];
+  A = A + Res_A;
+  B = B + Res_B;
+  D = Res.D_[0];
+  d = d + Res_d;
+  E = Res.E_[0];
+  F = Res.F_[0];
+  H = Res.H_[0];
+  c = Res.c_[0];
+
+
 
   int N = 5;
 

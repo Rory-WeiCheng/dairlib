@@ -4,7 +4,7 @@
 #include <pybind11/stl.h>
 
 #include "systems/controllers/c3_controller_franka.h"
-
+#include "solvers/lcs.h"
 #include "drake/multibody/plant/multibody_plant.h"
 
 namespace py = pybind11;
@@ -39,11 +39,12 @@ PYBIND11_MODULE(controllers_franka, m) {
                     const std::vector<Eigen::MatrixXd>&,
                     const std::vector<Eigen::MatrixXd>&,
                     const std::vector<Eigen::VectorXd>&,
-                    const drake::trajectories::PiecewisePolynomial<double>&>(),
+                    const drake::trajectories::PiecewisePolynomial<double>&,
+                    solvers::LCS>(),
            py::arg("plant"), py::arg("plant_f"), py::arg("plant_franka"), py::arg("context"), py::arg("context_f"), py::arg("context_franka"), py::arg("plant_ad"), py::arg("plant_ad_f"),
            py::arg("context_ad"),  py::arg("context_ad_f"), py::arg("scene_graph"), py::arg("diagram"),  py::arg("contact_geoms"),
            py::arg("num_friction_directions"), py::arg("mu"), py::arg("Q"),
-           py::arg("R"), py::arg("G"), py::arg("U"), py::arg("xdesired"), py::arg("pp"))
+           py::arg("R"), py::arg("G"), py::arg("U"), py::arg("xdesired"), py::arg("pp"), py::arg("Res"))
       .def("get_input_port_config", &C3Controller_franka::get_input_port_config,
            py_rvp::reference_internal)
       .def("get_input_port_output", &C3Controller_franka::get_input_port_output,

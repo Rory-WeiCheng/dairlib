@@ -68,6 +68,8 @@ cc_binary(
         "//systems/controllers:c3_controller_franka",
         "//examples/franka_trajectory_following:c3_parameters",
         "//systems:system_utils",
+        "//common:file_utils",
+        "//solvers:lcs",
         "@drake//:drake_shared_library",
         "@gflags",
     ],
