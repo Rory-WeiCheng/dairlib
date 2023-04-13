@@ -246,15 +246,31 @@ std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
   /// add the residual part matrices here
   MatrixXd Res_A = Res.A_[0];
   MatrixXd Res_B = Res.B_[0];
+  MatrixXd Res_D = Res.D_[0];
   MatrixXd Res_d = Res.d_[0];
+  MatrixXd Res_E = Res.E_[0];
+  MatrixXd Res_F = Res.F_[0];
+  MatrixXd Res_H = Res.H_[0];
+  MatrixXd Res_c = Res.c_[0];
+////  only warm start
+//  A = A + Res_A;
+//  B = B + Res_B;
+//  D = Res_D;
+//  d = d + Res_d;
+//  E = Res_E;
+//  F = Res_F;
+//  H = Res_H;
+//  c = Res_c;
+
+//  state-dependent formulations
   A = A + Res_A;
   B = B + Res_B;
-  D = Res.D_[0];
+  D = D + Res_D;
   d = d + Res_d;
-  E = Res.E_[0];
-  F = Res.F_[0];
-  H = Res.H_[0];
-  c = Res.c_[0];
+  E = E + Res_E;
+  F = F + Res_F;
+  H = H + Res_H;
+  c = c + Res_c;
 
 
 
