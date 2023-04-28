@@ -243,15 +243,42 @@ std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
             2 * contact_geoms.size() * num_friction_directions) =
       J_t * dt * d_v;
 
-  /// add the residual part matrices here
-  MatrixXd Res_A = Res.A_[0];
-  MatrixXd Res_B = Res.B_[0];
-  MatrixXd Res_D = Res.D_[0];
-  MatrixXd Res_d = Res.d_[0];
+//  add the residual part matrices here
+//  MatrixXd Res_A = Res.A_[0];
+  MatrixXd Res_Av = Res.A_[0];
+//  MatrixXd Res_B = Res.B_[0];
+  MatrixXd Res_Bv = Res.B_[0];
+//  MatrixXd Res_D = Res.D_[0];
+  MatrixXd Res_Dv = Res.D_[0];
+//  VectorXd Res_d = Res.d_[0];
+  VectorXd Res_dv = Res.d_[0];
   MatrixXd Res_E = Res.E_[0];
   MatrixXd Res_F = Res.F_[0];
   MatrixXd Res_H = Res.H_[0];
-  MatrixXd Res_c = Res.c_[0];
+  VectorXd Res_c = Res.c_[0];
+
+////  Assemble the position and learnt velocity part (for dynamics)
+  MatrixXd Res_A(n_total, n_total);
+  MatrixXd Res_B(n_total, n_input);
+  MatrixXd Res_D(n_total, n_contact);
+  VectorXd Res_d(n_total);
+
+  Res_A.block(0, 0, n_state, n_total) = dt * Nq * Res_Av;
+  Res_A.block(n_state, 0, n_vel, n_total) = Res_Av;
+  Res_B.block(0, 0, n_state, n_input) = dt * Nq * Res_Bv;
+  Res_B.block(n_state, 0, n_vel, n_input) = dt * Nq * Res_Bv;
+  Res_D.block(0, 0, n_state, n_contact) = dt * Nq * Res_Dv;
+  Res_D.block(n_state, 0, n_vel, n_contact) = Res_Dv;
+  d.head(n_state) = dt * Nq * Res_dv;
+  d.tail(n_vel) = Res_dv;
+
+////  learn both position and velocity
+//  Res_A = Res_Av;
+//  Res_B = Res_Bv;
+//  Res_D = Res_Dv;
+//  Res_d = Res_dv;
+
+
 ////  only warm start
 //  A = A + Res_A;
 //  B = B + Res_B;
@@ -271,6 +298,10 @@ std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
   F = F + Res_F;
   H = H + Res_H;
   c = c + Res_c;
+
+//  std::cout<<"Res_c:"<<std::endl;
+//  std::cout<<Res_c<<std::endl;
+
 
 
 

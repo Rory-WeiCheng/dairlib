@@ -328,8 +328,9 @@ int DoMain(int argc, char* argv[]){
   MatrixXd H_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/H_res.csv");
   MatrixXd c_res_m = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/c_res.csv");
   VectorXd c_res = Map<VectorXd>(c_res_m.data(), c_res_m.cols()*c_res_m.rows());
+
   int N_res = 1;
-  std::cout<< "(" << D_res.rows() << ", " << D_res.cols() << ")"<<std::endl;
+//  std::cout<< "(" << D_res.rows() << ", " << D_res.cols() << ")"<<std::endl;
   LCS Res(A_res, B_res, D_res, d_res, E_res, F_res, H_res, c_res, N_res);
 
   auto controller = builder.AddSystem<systems::controllers::C3Controller_franka>(

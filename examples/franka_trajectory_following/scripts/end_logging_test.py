@@ -17,7 +17,7 @@ def main():
 
         # wait 15 seconds for user to input description
         print("Provide a short description of this log. Press [Enter] to continue: ")
-        i, o, e = select.select( [sys.stdin], [], [], 15)
+        i, o, e = select.select( [sys.stdin], [], [], 5)
         if i:
           description = sys.stdin.readline().strip()
           f.write(description)
