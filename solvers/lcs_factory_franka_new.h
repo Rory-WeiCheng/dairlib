@@ -1,5 +1,5 @@
 #pragma once
-#include "solvers/lcs.h"
+#include "solvers/lcs_new.h"
 
 
 namespace dairlib {
@@ -27,7 +27,7 @@ class LCSFactoryFrankaNew {
   /// @param contact_geoms
   /// @param num_friction faces
   /// @param mu
-  static std::pair <LCS, double> LinearizePlantToLCS(
+  static std::pair <LCSNew, double> LinearizePlantToLCS(
       const drake::multibody::MultibodyPlant<double>& plant,
       const drake::systems::Context<double>& context,
       const drake::multibody::MultibodyPlant<drake::AutoDiffXd>& plant_ad,

@@ -26,7 +26,7 @@ using drake::systems::Context;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-std::pair <LCS, double> LCSFactoryFrankaNew::LinearizePlantToLCS(
+std::pair <LCSNew, double> LCSFactoryFrankaNew::LinearizePlantToLCS(
     const MultibodyPlant<double>& plant, const Context<double>& context,
     const MultibodyPlant<AutoDiffXd>& plant_ad,
     const Context<AutoDiffXd>& context_ad,
@@ -273,9 +273,9 @@ std::pair <LCS, double> LCSFactoryFrankaNew::LinearizePlantToLCS(
   std::vector<MatrixXd> H_lcs(N, H);
 //  std::vector<MatrixXd> H_lcs(N, H / AnDn);
 
-  LCS system(A_lcs, B_lcs, D_lcs, d_lcs, E_lcs, F_lcs, H_lcs, c_lcs);
+  LCSNew system(A_lcs, B_lcs, D_lcs, d_lcs, E_lcs, F_lcs, H_lcs, c_lcs);
 
-  std::pair <LCS, double> ret (system, AnDn);
+  std::pair <LCSNew, double> ret (system, AnDn);
   return ret;
 
 }

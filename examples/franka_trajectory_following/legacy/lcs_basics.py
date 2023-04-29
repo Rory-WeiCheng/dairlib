@@ -3,7 +3,7 @@ from pydrake.all import (AbstractValue, DiagramBuilder, DrakeLcm, LeafSystem,
                          MultibodyPlant, Parser, RigidTransform, Subscriber,
                          LcmPublisherSystem, TriggerType, AddMultibodyPlantSceneGraph,
                          LcmInterfaceSystem)
-from pydairlib.systems import (lcs,lcs_factory_franka_new)
+from pydairlib.systems import (lcs_new,lcs_factory_franka_new)
 
 # newly added
 from pydrake.multibody.tree import JacobianWrtVariable,MultibodyForces_
@@ -17,7 +17,6 @@ import pdb
 
 ################################## TODO: modifying the urdf using scripts ###################################
 
-start_time = time.time()
 # load parameters
 param = yaml_load(
     filename="examples/franka_trajectory_following/parameters.yaml")
@@ -96,6 +95,7 @@ context_franka = diagram_franka.GetMutableSubsystemContext(plant_franka, diagram
 # logdir, log_num = get_most_recent_logs()
 logdir = "/usr/rory-workspace/data/experiment_logs/2023/04_23_23"
 for i in range(100):
+    start_time = time.time()
     log_num = "{:02}".format(i)
     stateinput_file = "{}/{}/State_Input-{}.npz".format(logdir, log_num, log_num)
     contact_file = "{}/{}/Contact_Info-{}.npz".format(logdir, log_num, log_num)
@@ -127,6 +127,8 @@ for i in range(100):
     x_model_list = []
     x_AB_list = []
     u_list = []
+    # also record the calculated lambda from solving the lcp
+    lam_model_list = []
 
     # # check whether or not the F matrix is a P-matrix
     # F_check_list=[]
@@ -258,15 +260,17 @@ for i in range(100):
 
 
         # simulate the lcs and record the next state predicted by the model, called x_model
-        x_model = System.Simulate(state,u)
+        x_model, lam_model = System.Simulate(state,u)
         x_AB = A @ state + B @ u + d
         x_list.append(state)
         u_list.append(u)
         x_AB_list.append(x_AB)
         x_model_list.append(x_model)
+        lam_model_list.append(lam_model)
 
     # array size: (num_data, num_dim)
     x_model_all = np.array(x_model_list)
+    lam_model_all = np.array(lam_model_list)
     x_all = np.array(x_list)
     x_AB_all = np.array(x_AB_list)
     u_all = np.array(u_list)
@@ -289,7 +293,7 @@ for i in range(100):
     npz_file = "/usr/rory-workspace/data/c3_learning/data_new/LCS_Matrices-{}.npz".format(log_num)
     np.savez(npz_file, **mdic_lcs)
     print("creating state and residual npz files")
-    mdic_state_input ={"state_plant":x_all,"state_model_AB":x_AB_all,"state_model":x_model_all,"residual":residual,"input":u_all}
+    mdic_state_input ={"state_plant":x_all,"state_model_AB":x_AB_all,"state_model":x_model_all,"residual":residual,"input":u_all,"lambda_model":lam_model_all}
     # npz_file = "{}/{}/State_Residual-{}.npz".format(logdir, log_num, log_num)
     npz_file = "/usr/rory-workspace/data/c3_learning/data_new/State_Residual-{}.npz".format(log_num)
     np.savez(npz_file, **mdic_state_input)

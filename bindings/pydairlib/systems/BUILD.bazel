@@ -106,6 +106,21 @@ pybind_py_library(
 )
 
 pybind_py_library(
+    name = "lcs_new_py",
+    cc_deps = [
+        "@drake//:drake_shared_library",
+        "//solvers:lcs",
+    ],
+    cc_so_name = "lcs_new",
+    cc_srcs = ["lcs_new_py.cc"],
+    py_deps = [
+        "@drake//bindings/pydrake",
+        ":module_py",
+    ],
+    py_imports = ["."],
+)
+
+pybind_py_library(
     name = "lcs_factory_franka_new_py",
     cc_deps = [
         "@drake//:drake_shared_library",
@@ -158,6 +173,7 @@ PY_LIBRARIES = [
     ":controllers_franka_py",
     ":impedance_controllers_py",
     ":lcs_py",
+    ":lcs_new_py",
     ":lcs_factory_franka_new_py",
 ]
 
