@@ -1,0 +1,546 @@
+[33mcommit 03d75098bdc8570c26379abb6e53161c12de3e4b[m[33m ([m[1;36mHEAD -> [m[1;32madmm_adaptive[m[33m, [m[1;31morigin/admm_adaptive[m[33m)[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Fri Apr 28 19:08:41 2023 -0400
+
+    fix data collection
+
+[33mcommit b3dea584ff8edfd61b89a349aa5963665d280d2f[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Wed Apr 12 22:26:42 2023 -0400
+
+    introducing state-dependent residual for a single push
+
+[33mcommit c5beb8df7861684a299d338f3840d585170f92af[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Tue Apr 4 23:35:18 2023 -0400
+
+    slightly modify the C3controller structure to roughly integrate the learning model
+
+[33mcommit 791dc280207d3eb6f422d9c943a28563b5877408[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Sun Apr 2 00:08:31 2023 -0400
+
+    fix data collecting dimension to align with lcs_learning
+
+[33mcommit c5a1c9ab9711996593685a0c7776362fe9c46710[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Tue Mar 28 03:34:13 2023 -0400
+
+    fix the slow code issue
+
+[33mcommit 16645da461ca1e68e9e61edfe123d4afb2df4251[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Tue Mar 28 03:32:55 2023 -0400
+
+    fix the slow code issue
+
+[33mcommit 35192b9f4eb316b10ab6b07f7d7beb3912c775ba[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Fri Mar 24 17:59:29 2023 -0400
+
+    fix plotting mistake, modify the ball urdf to be wrong and test C3
+
+[33mcommit 0e973a62c47bc05b29d311e867b22d8d4832f6d1[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Thu Mar 23 02:59:52 2023 -0400
+
+    fix gravity bug for end-effector
+
+[33mcommit 4931f03235f21729da2659d1d91817adae9df9a0[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Mon Mar 20 15:41:58 2023 -0400
+
+    fix some typos and comments
+
+[33mcommit 7e505eeb4bf65ef5fa4a07284ded15c39f91134f[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Mon Mar 20 02:06:53 2023 -0400
+
+    Finished binding lcs, Finished writing FK simulation and calculating residual, Next Check correctness
+
+[33mcommit 394eccc5f3c325180caa4e33c6f4b48a39b93aff[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Mon Mar 20 01:42:29 2023 -0400
+
+    Finished binding lcs, Finished writing FK simulation to get data, Next Check correctness and Start calulating residual
+
+[33mcommit 0435f023c5d9fd59818c8223c6dd663c7f30962d[m
+Author: Wei-Cheng Huang Y9000P (Ubuntu 20.04) <rory0306@gmail.com>
+Date:   Sat Mar 18 16:11:21 2023 -0400
+
+    submit changes for last months
+
+[33mcommit 76cee364f67e930c5629e03b3bc9a7a479d12655[m[33m ([m[1;31morigin/admm[m[33m)[m
+Author: alp <alpaydinogl@gmail.com>
+Date:   Tue Mar 14 14:11:07 2023 -0400
+
+    small changes
+
+[33mcommit eeed3a183aecaf168323d989a2c8a607738d86d4[m[33m ([m[1;32madmm[m[33m)[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Mon Jan 16 18:54:04 2023 -0500
+
+    Fixed index offset in plotthing script
+
+[33mcommit 3a30f7a9d1a50216452e7a638bb9d16ac9e90793[m
+Author: alp <alpaydinogl@gmail.com>
+Date:   Fri Dec 9 17:33:28 2022 -0500
+
+    adding solve time plots
+
+[33mcommit af53efc3a9d4eebad5e0605e349f785fc387c6c3[m
+Author: alp <alpaydinogl@gmail.com>
+Date:   Fri Dec 9 16:46:26 2022 -0500
+
+    plotting
+
+[33mcommit 9fe64d414ab5ea4415321f907a3ca068bf38017f[m
+Author: alp <alpaydinogl@gmail.com>
+Date:   Thu Dec 8 15:04:02 2022 -0500
+
+    plotting
+
+[33mcommit cf9e8c286777d2728245f29e679ad5b11aebaacf[m
+Author: alp <alpaydinogl@gmail.com>
+Date:   Thu Dec 8 14:30:50 2022 -0500
+
+    more hacks to get figures
+
+[33mcommit f1f7caec2f8e98afc8e8c44f4a3926074230e8f9[m
+Author: alp <alpaydinogl@gmail.com>
+Date:   Wed Dec 7 15:58:30 2022 -0500
+
+    few hacks, might want to go back to previous commit
+
+[33mcommit 44f733913156387c3dbea17617fede14b2430500[m
+Author: AlpAydinoglu <39811572+AlpAydinoglu@users.noreply.github.com>
+Date:   Mon Oct 10 15:06:47 2022 -0400
+
+    Update lcs_factory.cc
+    
+    bug fix (same fix as lcs_factory_franka)
+
+[33mcommit 258ecccae0cb30048bd0526590e054e6ee3cd76c[m
+Merge: 18ffc687c 72605f87c
+Author: alp <alpaydinogl@gmail.com>
+Date:   Mon Sep 26 15:39:23 2022 -0400
+
+    Merge remote-tracking branch 'origin/admm' into admm
+
+[33mcommit 18ffc687caa477391b421b571301016ee10dba96[m
+Author: alp <alpaydinogl@gmail.com>
+Date:   Mon Sep 26 15:36:18 2022 -0400
+
+    added comments and fixed a bug
+
+[33mcommit 170227af2a933c1a2dd393d1c7537cbe0fd25cb1[m
+Author: alp <alpaydinogl@gmail.com>
+Date:   Mon Sep 26 13:41:08 2022 -0400
+
+    bug fix and documentation
+
+[33mcommit 72605f87c342d235e59914894531ecde6401fcf4[m
+Author: AlpAydinoglu <39811572+AlpAydinoglu@users.noreply.github.com>
+Date:   Fri Sep 16 22:14:47 2022 -0400
+
+    Update BUILD.bazel
+
+[33mcommit f8a27f6610ea9b9bb0c26415e34483227376732f[m
+Author: AlpAydinoglu <39811572+AlpAydinoglu@users.noreply.github.com>
+Date:   Tue Aug 30 17:41:20 2022 -0400
+
+    Update README.md
+
+[33mcommit 326f38e19f6fb5c27c0b1b7747966b97ab73956a[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Fri Aug 26 17:16:32 2022 -0400
+
+    file add
+
+[33mcommit 8c39696c661af0eb0e9036d872cd6520c8198ae6[m
+Author: Alp <alpaydinogl@gmail.com>
+Date:   Fri Aug 26 17:14:08 2022 -0400
+
+    adam's last day!
+
+[33mcommit 16640b1c0ab277429b9b8fae21c252ea7dbc2946[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Fri Aug 26 17:12:22 2022 -0400
+
+    first full circlesgit st! also my last day :D
+
+[33mcommit 8f199673b40f953f8b5b8d3d084d08d9273ea542[m
+Author: Adam Wei <65464882+adamw8@users.noreply.github.com>
+Date:   Fri Aug 26 15:27:49 2022 -0400
+
+    Update README.md
+
+[33mcommit 65e9e17acd1f119176d846ce6a44ea6bf766f119[m
+Author: Adam Wei <65464882+adamw8@users.noreply.github.com>
+Date:   Fri Aug 26 15:08:30 2022 -0400
+
+    Update README.md
+
+[33mcommit ba496e20adb452444cc0a333599f9ef2a2105c4b[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 25 12:25:59 2022 -0400
+
+    final sync changes
+
+[33mcommit 3f33317c2cb2fa3389547e97e1e9b9382c4f054f[m
+Merge: 570915093 9b8e54770
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 25 12:06:25 2022 -0400
+
+    Merge branch 'admm' of https://github.com/DAIRLab/dairlib into admm
+
+[33mcommit 570915093d1d16161ad8bbb0ad80356eb91bbb9d[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 25 11:58:36 2022 -0400
+
+    minor procman change for echoing
+
+[33mcommit 9b8e54770a1a5e3882e030364e0ad7075c8c682c[m
+Author: Alp <alpaydinogl@gmail.com>
+Date:   Thu Aug 25 11:28:45 2022 -0400
+
+    sync from c3 computer
+
+[33mcommit c370c77b739561902af9236efc870f25b17fb388[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 25 11:12:54 2022 -0400
+
+    intentionally turned down rotational damping after bug catch
+
+[33mcommit 1e8e8a0ec7124e48ea9afa2593bc16d2c8ddbe11[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 25 11:10:56 2022 -0400
+
+    syncing code from Franka computer
+
+[33mcommit 39c6b359f8eec854a4c82d5141b81340f8086b12[m
+Merge: 734f90a3d f169ae2eb
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Wed Aug 24 13:55:55 2022 -0400
+
+    Merge branch 'admm' of github.com:DAIRLab/dairlib into admm
+
+[33mcommit 734f90a3df873edcd96f6fc24128ac4e6f100497[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Wed Aug 24 13:55:23 2022 -0400
+
+    initial drake diagram for franka position control
+
+[33mcommit f169ae2ebc6b71a249d5f5fe6d8cbbf318877070[m
+Author: Adam Wei <65464882+adamw8@users.noreply.github.com>
+Date:   Tue Aug 23 14:48:24 2022 -0400
+
+    Update README.md
+
+[33mcommit 43c8421f1a46a8f956f703e3e55a8e1ceb109c41[m
+Author: Adam Wei <65464882+adamw8@users.noreply.github.com>
+Date:   Sun Aug 21 15:51:06 2022 -0400
+
+    Update README.md
+
+[33mcommit baaa12161e15e83b76960dcbe5b3782ca21bd4e2[m
+Author: Adam Wei <65464882+adamw8@users.noreply.github.com>
+Date:   Sat Aug 20 18:40:46 2022 -0400
+
+    Update README.md
+
+[33mcommit c50b080bc086664a62c303976562a4dbc48a287d[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Fri Aug 19 15:08:57 2022 -0400
+
+    fix bug in initial lcmt_c3 message
+
+[33mcommit cfface7576db4eda15af9b94d917556617e955fa[m
+Merge: d72de21bb 08db92f06
+Author: Alp <alpaydinogl@gmail.com>
+Date:   Fri Aug 19 14:48:06 2022 -0400
+
+    resolved merge conflict
+
+[33mcommit d72de21bbdae2df75c2324c3512553343d285e0f[m
+Author: Alp <alpaydinogl@gmail.com>
+Date:   Fri Aug 19 14:45:45 2022 -0400
+
+    parameters and logging script
+
+[33mcommit 08db92f06d43f6e53d17a562590190f6cacc594f[m
+Author: Adam Wei <65464882+adamw8@users.noreply.github.com>
+Date:   Fri Aug 19 11:40:40 2022 -0400
+
+    Update README.md
+    
+    First draft of Calibration and Experiments Sections
+
+[33mcommit bbd4c455710ee75194d7fe72554d547d826e37fc[m
+Merge: d443a1851 b7a452ae3
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 18 18:59:13 2022 -0400
+
+    resolve merge conflict
+
+[33mcommit d443a185175086111ba4db16eb8dc0455598ec41[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 18 18:57:32 2022 -0400
+
+    angled 2 options for angle heuristic
+
+[33mcommit b7a452ae361c1dc23d34ea926c40662054a408e6[m
+Merge: 4a686c220 c5daac840
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 18 15:56:08 2022 -0400
+
+    michael demo
+
+[33mcommit c5daac8405f9b9af83ee2ab746bf36e041ff4219[m
+Merge: 683210bba dce21ae3b
+Author: Alp <alpaydinogl@gmail.com>
+Date:   Thu Aug 18 15:05:36 2022 -0400
+
+    Merge branch 'admm' of github.com:DAIRLab/dairlib into admm
+
+[33mcommit dce21ae3b9f004916fe89fdc7e792c3a88cbbe5e[m
+Author: Adam Wei <65464882+adamw8@users.noreply.github.com>
+Date:   Thu Aug 18 11:47:04 2022 -0400
+
+    uploaded procman image for docs
+
+[33mcommit 3cc27bcc79cc0be746cd47b69f71e392958fcb9a[m
+Author: Adam Wei <65464882+adamw8@users.noreply.github.com>
+Date:   Thu Aug 18 11:46:03 2022 -0400
+
+    Create README.md
+
+[33mcommit 4a686c220a9c88eb96199d10ca601a0a33c69279[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 18 10:52:18 2022 -0400
+
+    stiff rotation params
+
+[33mcommit 683210bbaeaed2f7843917545daf0b6d035c1e18[m
+Author: Alp <alpaydinogl@gmail.com>
+Date:   Thu Aug 18 10:41:53 2022 -0400
+
+    meh params in sim
+
+[33mcommit 8f7c9a25e192dfbf9a26f29b460130236c5d92aa[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 18 10:34:56 2022 -0400
+
+    procman change
+
+[33mcommit 5c9d0219afdca5f70550e907a245b20a65c5fe56[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 18 10:15:34 2022 -0400
+
+    parameter improvements: timing is now in seconds instead of period and duty cycle, moved c3 velocity limit to parameters
+
+[33mcommit 75bf200945007e7e5a4304440196d9520bab1b9b[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 18 09:45:52 2022 -0400
+
+    minor fix in urdf update script
+
+[33mcommit a3d23c30f34352fb35a572703c7463b1db1642e6[m
+Author: Alp <alpaydinogl@gmail.com>
+Date:   Wed Aug 17 20:38:20 2022 -0400
+
+    decent parameters experiment
+
+[33mcommit 2680b1d1fc801a01b3483c724f241904d6cc8e37[m
+Author: Alp <alpaydinogl@gmail.com>
+Date:   Wed Aug 17 17:35:57 2022 -0400
+
+    merge
+
+[33mcommit c80fdbc32201e2b47c1d9a53e4c77cf758511c90[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Wed Aug 17 17:34:09 2022 -0400
+
+    fix flag
+
+[33mcommit 2f639d332a8dce5290569ee6eac546ad30514a55[m
+Merge: 1a4d638bb 17759797e
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Wed Aug 17 17:22:13 2022 -0400
+
+    Merge branch 'admm' of https://github.com/DAIRLab/dairlib into admm
+
+[33mcommit 1a4d638bbe6dd3bb8c773ab8f76db9587838d04e[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Wed Aug 17 17:21:47 2022 -0400
+
+    c3 sync
+
+[33mcommit 17759797e2aa6bb62d24e050af32c3f6a381657d[m
+Author: Alp <alpaydinogl@gmail.com>
+Date:   Tue Aug 16 19:55:41 2022 -0400
+
+    c3-miqpw
+
+[33mcommit cd9dafb09b3a48c5056f89813a2618f7b397b519[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Tue Aug 16 19:11:11 2022 -0400
+
+    c3 iterations
+
+[33mcommit a8702711429b53f1e34985e7f70962527584cbd0[m
+Merge: a6b70fec9 e24834ba2
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Tue Aug 16 17:43:15 2022 -0400
+
+    Merge branch 'admm' of github.com:DAIRLab/dairlib into admm
+
+[33mcommit a6b70fec92e2560c0ec0ec5c6f8e3d04c88885e0[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Tue Aug 16 17:43:06 2022 -0400
+
+    sync
+
+[33mcommit e24834ba28a6dfbb990a4a5050972055c9b0b48c[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Tue Aug 16 10:48:55 2022 -0400
+
+    minor log bug fixes and increase camera pub freq
+    
+    minor logging bug fixes
+    
+    minor print change
+
+[33mcommit f43793feed69ed182ed72043bda9996669d7d1a8[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Mon Aug 15 21:19:37 2022 -0400
+
+    finished logging for experiments
+
+[33mcommit c9a90cfbfbcd82fa51f8db5912900ed8e8a12d72[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Mon Aug 15 13:09:01 2022 -0400
+
+    experiments from 08/12
+
+[33mcommit c03c6fca84842df5aca9e54c2fdc5e0d4cdc147f[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Fri Aug 12 10:21:02 2022 -0400
+
+    tested improvements from prev commits
+    
+    fixed logging bugs
+    
+    added franka control node to procman
+    
+    fix log path
+
+[33mcommit 69b556959ac67b667bfcaa511e1ca573622f8717[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Fri Aug 12 09:55:26 2022 -0400
+
+    config file for logging
+
+[33mcommit fe12744c62ac49566678f9b5ee44203e163fb1cd[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Thu Aug 11 11:33:22 2022 -0400
+
+    Improvements to experiment setup
+    
+    added flag for joint state channel in run_c3_ros_to_lcm and minor BAZEL changes
+    
+    improved starting/stopping script, needs testing
+    
+    moved boilerplate path finding code to function
+    
+    minor changeS
+    
+    slight change to q_init_finger, now represents height above table
+    
+    script for updating urdf from parameters.yaml
+    
+    integrate angular velocity for visualization
+    
+    log parameters on c3 computer as well
+
+[33mcommit 0544b34dfca7f8faae5b6aa11d4d1c0e58dfa0f3[m
+Merge: 9b0f6ca57 d85e16852
+Author: alp <alpaydinogl@gmail.com>
+Date:   Wed Aug 10 16:42:27 2022 -0400
+
+    Merge branch 'admm' of github.com:DAIRLab/dairlib into admm
+
+[33mcommit 9b0f6ca57827ebcbbf1c3fbd252266ed720ea718[m
+Author: alp <alpaydinogl@gmail.com>
+Date:   Wed Aug 10 16:42:20 2022 -0400
+
+    bypass ros
+
+[33mcommit d85e16852ea40cb4c90449e03538e5628945a1b7[m
+Author: dair <dair>
+Date:   Wed Aug 10 16:39:58 2022 -0400
+
+    params
+
+[33mcommit 077fc257709cdb4b015a822fccaa0c3e3aad54a8[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Tue Aug 9 18:09:52 2022 -0400
+
+    sync with alp
+
+[33mcommit 6117a7e3c328356d1965116d332f80a8e20f5465[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Tue Aug 9 17:54:13 2022 -0400
+
+    sync with alp
+
+[33mcommit e1707c5eb5047e604ad66731bb4dc5863d807b44[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Tue Aug 9 17:42:06 2022 -0400
+
+    sync with alp
+
+[33mcommit 8bbd95f3682362f0e1167663e438aeaf7408ee2a[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Tue Aug 9 16:23:32 2022 -0400
+
+    sync with alp
+
+[33mcommit 0ab450ab1478f8a0ebbf8889e52b360d24be9f17[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Tue Aug 9 10:20:18 2022 -0400
+
+    experiments
+
+[33mcommit cd27c105d972bc0c2f9ba98ccbf396767d3f64ae[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Mon Aug 8 13:44:01 2022 -0400
+
+    changed table offset
+
+[33mcommit 1732720c6abaf3c02e95120e00e8e4cf0fc79831[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Fri Aug 5 18:46:57 2022 -0400
+
+    split procman into c3 vs impedance experiments
+
+[33mcommit ba70b0d5a52d0832403a2ffebc736b0ea07087c8[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Fri Aug 5 15:09:26 2022 -0400
+
+    procman
+
+[33mcommit 456ffe0ee3b6a5b5e55e7de6f1c25df526135132[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Fri Aug 5 14:40:42 2022 -0400
+
+    added starting code
+
+[33mcommit 1b7f19369b1d26ffa2df73bd8b44e840570618f1[m
+Author: Adam Wei <adam.wei@mail.utoronto.ca>
+Date:   Fri Aug 5 14:25:04 2022 -0400
+
+    ttl changes in procman
+
+[33mcommit 4889ccc34de1b40396e94d9b0fbbedfafd6eb32f[m
+A
