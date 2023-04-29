@@ -447,4 +447,3 @@ for i in range(100):
     # plt.legend(fontsize=20)
     # plt.xticks(size = 20)
     # plt.yticks(size = 20)
-    # plt.show()

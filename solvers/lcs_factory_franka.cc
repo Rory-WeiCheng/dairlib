@@ -282,6 +282,10 @@ std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
   H = H + Res_H;
   c = c + Res_c;
 
+//  std::cout<<"Res_c:"<<std::endl;
+//  std::cout<<Res_c<<std::endl;
+
+
 
 
   int N = 5;
