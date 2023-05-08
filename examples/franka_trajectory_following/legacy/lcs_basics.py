@@ -62,7 +62,8 @@ context_f = diagram_f.GetMutableSubsystemContext(plant_f, diagram_context)
 # initialize the diagram builder: builder_franka
 builder_franka = DiagramBuilder()
 sim_dt = 1e-4
-sample_dt = 1e-1
+sample_dt = 1e-2
+sample_step = 100 # link with sample_dt
 
 # Adds both MultibodyPlant: plant_franka and the SceneGraph: scene_graph, and wires them together.
 # this plant_franka mainly is used contain the whole franka instead of simple end-effector
@@ -94,7 +95,7 @@ context_franka = diagram_franka.GetMutableSubsystemContext(plant_franka, diagram
 # load the data
 # logdir, log_num = get_most_recent_logs()
 logdir = "/usr/rory-workspace/data/experiment_logs/2023/04_23_23"
-for i in range(100):
+for i in range(20):
     start_time = time.time()
     log_num = "{:02}".format(i)
     stateinput_file = "{}/{}/State_Input-{}.npz".format(logdir, log_num, log_num)
@@ -145,7 +146,7 @@ for i in range(100):
 
     # sample dt is 0.1, so for sim_dt=1e-4, roughly sample every 1000 points
     # can be further improved to get the actually 0.1 interval using timestamp
-    for i in range(21000,32000,1000):
+    for i in range(20000,30100,sample_step):
         # get position and velocities, in the future, fix the data logging in the future to get shorter and clearer codes
         position = []
         velocity = []
@@ -169,7 +170,7 @@ for i in range(100):
 
         # end effector offset
         ee_offset = np.array(param["EE_offset"])
-        g = 9.8
+        g = 9.81
 
         # get H_mat and get end effector position (p_ee) using ee_offset
         H_mat = plant_franka.EvalBodyPoseInWorld(context_franka, plant_franka.GetBodyByName("panda_link10"))
@@ -184,12 +185,12 @@ for i in range(100):
         J_franka = J_wee[:6,:7]
         v_ee = (J_franka @ velocity[0:7])[-3:]
 
-        # calculate the end-effector velocity a_ee, first we need to get the generalized acceleration vdot and spatical acceleration bias Jdotv
-        # extract the franka part since the whole model also includes the ball
-        vdot = plant_franka.get_generalized_acceleration_output_port().Eval(context_franka)
-        vdot_franka = vdot[0:7]
-        Jdotv_ee = plant_franka.CalcBiasSpatialAcceleration(context_franka,JacobianWrtVariable.kV,ee_frame,ee_offset,world_frame,world_frame)
-        a_ee = (J_franka @ vdot_franka)[-3:] + Jdotv_ee.translational() + g * np.array([0,0,1])
+        # calculate the end-effector acceleration a_ee, first we need to get the generalized acceleration vdot and spatical acceleration bias Jdotv
+        # extract the franka part since the whole model also includes the ball, comment out for this time, see the new input below 2023.5.5
+        # vdot = plant_franka.get_generalized_acceleration_output_port().Eval(context_franka)
+        # vdot_franka = vdot[0:7]
+        # Jdotv_ee = plant_franka.CalcBiasSpatialAcceleration(context_franka,JacobianWrtVariable.kV,ee_frame,ee_offset,world_frame,world_frame)
+        # a_ee = (J_franka @ vdot_franka)[-3:] + Jdotv_ee.translational() + g * np.array([0,0,1])
 
         # get ball pose and (angular) velocity
         q_b = position[-7:]
@@ -200,9 +201,45 @@ for i in range(100):
         v = np.concatenate([v_ee, v_b])
         state = np.concatenate([q,v])
         # mass of the end-effector, originally is 0.01, should be tuned.
-        m_ee = 0.01
-        # the input force should be u = F = m_ee*a_ee
-        u = a_ee * m_ee
+        m_ee = 0.06
+        # the input force should be u = F = m_ee*a_ee (abandon 2023.5.5)
+        # calculate v_ee at next step to get the input for simplified model
+        # u = (v_ee_next - v_ee) / sample_dt * m_ee
+
+        # do the FK for the next state
+        position_next = []
+        velocity_next = []
+        position_next.append(q_joint[:, i + sample_step])
+        position_next.append(R_b[:, i + sample_step])
+        position_next.append(p_b[:, i + sample_step])
+        position_next = np.concatenate(position_next)
+        velocity_next.append(q_joint_dot[:, i + sample_step])
+        velocity_next.append(w_b[:, i + sample_step])
+        velocity_next.append(v_b_data[:, i + sample_step])
+        velocity_next = np.concatenate(velocity_next)
+        effort_next = u_data[:, i + sample_step]
+
+        plant_franka.SetPositions(context_franka,position_next)
+        plant_franka.SetVelocities(context_franka,velocity_next)
+        # write my own set input function (equivalent to SetInputsIfNew in c++)
+        if (not plant_franka.get_actuation_input_port().HasValue(context_franka)) or (not (effort_next == plant_franka.get_actuation_input_port().Eval(context_franka)).all()):
+            plant_franka.get_actuation_input_port().FixValue(context_franka, effort_next)
+
+        # get H_mat and get end effector position (p_ee) using ee_offset
+        H_mat_next = plant_franka.EvalBodyPoseInWorld(context_franka, plant_franka.GetBodyByName("panda_link10"))
+        R_next = H_mat_next.rotation()
+        p_ee_next = H_mat_next.translation() + R_next @ ee_offset
+
+        # get jacobian at end-effector to calculate velocity at v_ee
+        ee_frame = plant_franka.GetBodyByName("panda_link10").body_frame()
+        world_frame = plant_franka.world_frame()
+        J_wee_next = plant_franka.CalcJacobianSpatialVelocity(context_franka, JacobianWrtVariable.kV, ee_frame,
+                                                             ee_offset, world_frame, world_frame)
+        # extract the franka part since the whole model also includes the ball
+        J_franka_next = J_wee_next[:6, :7]
+        v_ee_next = (J_franka_next @ velocity_next[0:7])[-3:]
+
+        u = ((v_ee_next - v_ee) / sample_dt + g * np.array([0,0,1]))* m_ee
         xu = np.concatenate([state,u])
 
         # set the state and input for the simplified model: xu to autodiff type and set simplified model's context
@@ -290,12 +327,12 @@ for i in range(100):
     print("creating matrices npz files")
     mdic_lcs ={"A_lcs":A_list,"B_lcs":B_list,"D_lcs":D_list,"d_lcs":d_list,"E_lcs":E_list,"F_lcs":F_list,"H_lcs":H_list,"c_lcs":c_list}
     # npz_file = "{}/{}/LCS_Matrices-{}.npz".format(logdir, log_num, log_num)
-    npz_file = "/usr/rory-workspace/data/c3_learning/data_new/LCS_Matrices-{}.npz".format(log_num)
+    npz_file = "/usr/rory-workspace/data/c3_learning/data_new/dt_001/LCS_Matrices-{}.npz".format(log_num)
     np.savez(npz_file, **mdic_lcs)
     print("creating state and residual npz files")
     mdic_state_input ={"state_plant":x_all,"state_model_AB":x_AB_all,"state_model":x_model_all,"residual":residual,"input":u_all,"lambda_model":lam_model_all}
     # npz_file = "{}/{}/State_Residual-{}.npz".format(logdir, log_num, log_num)
-    npz_file = "/usr/rory-workspace/data/c3_learning/data_new/State_Residual-{}.npz".format(log_num)
+    npz_file = "/usr/rory-workspace/data/c3_learning/data_new/dt_001/State_Residual-{}.npz".format(log_num)
     np.savez(npz_file, **mdic_state_input)
 
     # np.set_printoptions(threshold=np.inf)

@@ -1,4 +1,5 @@
 import lcm
+import pdb
 import matplotlib.pyplot as plt
 import scipy.io
 import dairlib.lcmt_robot_output
@@ -69,7 +70,8 @@ def passthrough_callback(data, *args, **kwargs):
 channels = {
     "FRANKA_OUTPUT": dairlib.lcmt_robot_output,
     "FRANKA_STATE_ESTIMATE":dairlib.lcmt_robot_output,
-    "CONTACT_RESULTS": drake.lcmt_contact_results_for_viz
+    "CONTACT_RESULTS": drake.lcmt_contact_results_for_viz,
+    "CONTROLLER_INPUT": dairlib.lcmt_c3,
 }
 
 '''
@@ -165,6 +167,7 @@ def processing_callback(data, channel):
         result at each time instant would differ from each other due to breaking and making contact
 
     '''
+    # pdb.set_trace()
     if channel == "FRANKA_OUTPUT":
         # initialize the empty list to record the data
         position = []
@@ -275,6 +278,8 @@ def main():
     print_log_summary(logfile, log)
 
     log = lcm.EventLog(logfile, "r")
+    # # controller input test
+    # get_log_data(log, channels, -1, processing_callback, "CONTROLLER_INPUT")
     # get the states and inputs
     position, velocity, effort ,acceleration, timestamp_state = get_log_data(log, channels, -1, processing_callback, "FRANKA_OUTPUT")
 
