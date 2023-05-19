@@ -136,7 +136,7 @@ class RobotC3Receiver : public drake::systems::LeafSystem<double> {
 class RobotC3Sender : public drake::systems::LeafSystem<double> {
  public:
   explicit RobotC3Sender(int num_positions, int num_velocities,
-                    int lambda_size, int  misc_size);
+                    int lambda_size, int misc_size, int num_input);
 
  private:
   void OutputC3(const drake::systems::Context<double>& context,
@@ -145,8 +145,19 @@ class RobotC3Sender : public drake::systems::LeafSystem<double> {
   int data_size_;
 };
 
+/// Add the new RobotLCSSender class
+/// Receives the output matrices of the LCS learner, and outputs it as an LCM
+/// message with type lcmt_lcs Its output port is usually connected to
+/// an LcmPublisherSystem to publish the messages it generates.
+//class RobotLCSSender : public drake::systems::LeafSystem<double> {
+// public:
+//  explicit RobotLCSSender();
+//
+//  private:
+//}
 
-///
+
+
 /// Convenience method to add and connect leaf systems for controlling
 /// a MultibodyPlant via LCM. Makes two prmary connections:
 ///  (1) connects the state output from the plant to a RobotOutputSender and

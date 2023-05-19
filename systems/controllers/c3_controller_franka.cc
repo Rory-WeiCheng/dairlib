@@ -120,8 +120,8 @@ C3Controller_franka::C3Controller_franka(
 
 
   state_output_port_ = this->DeclareVectorOutputPort(
-          "xee, xball, xee_dot, xball_dot, lambda, visualization",
-          TimestampedVector<double>(38), &C3Controller_franka::CalcControl)
+          "xee, xball, xee_dot, xball_dot, lambda, visualization, ",
+          TimestampedVector<double>(41), &C3Controller_franka::CalcControl)
       .get_index();
 
   q_map_franka_ = multibody::makeNameToPositionsMap(plant_franka_);
@@ -188,13 +188,17 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
 
     // fill st_desired
     VectorXd traj = pp_.value(timestamp);
-    VectorXd st_desired = VectorXd::Zero(38);
+    VectorXd st_desired = VectorXd::Zero(41);
+    VectorXd input = VectorXd::Zero(3);
     st_desired.head(3) << target[0];
     st_desired.segment(3, 4) << orientation_d.w(), orientation_d.x(), orientation_d.y(), orientation_d.z();
     st_desired.segment(11, 3) << finish(0), finish(1), ball_radius + table_offset;
     st_desired.segment(14, 3) << target[1];
     st_desired.segment(32, 3) << finish(0), finish(1), ball_radius + table_offset;
-    st_desired.tail(3) << finish(0), finish(1), ball_radius + table_offset;
+//    st_desired.tail(3) << finish(0), finish(1), ball_radius + table_offset;
+    st_desired.segment(35, 3) << finish(0), finish(1), ball_radius + table_offset;
+    st_desired.tail(3) << input;
+
 
     state_contact_desired->SetDataVector(st_desired);
     state_contact_desired->set_timestamp(timestamp);
@@ -499,9 +503,10 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   VectorXd force_des = VectorXd::Zero(6);
   force_des << force(0), force(2), force(4), force(5), force(6), force(7);
 
-  VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size());
+//  VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size());
+  VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size() + input.size());
 
-  st_desired << state_next.head(3), orientation_d, state_next.tail(16), force_des.head(6), ball_xyz_d, ball_xyz, true_ball_xyz;
+  st_desired << state_next.head(3), orientation_d, state_next.tail(16), force_des.head(6), ball_xyz_d, ball_xyz, true_ball_xyz, input;
 
 //  std::cout << "ADMM_X" << std::endl;
 //  std::cout << state_next(7) << std::endl;

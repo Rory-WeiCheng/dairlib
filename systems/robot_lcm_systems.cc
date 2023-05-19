@@ -292,9 +292,9 @@ void RobotC3Receiver::CopyC3Out(const Context<double>& context,
 // methods implementation for RobotC3Sender.
 
 RobotC3Sender::RobotC3Sender(int num_positions, int num_velocities,
-                    int lambda_size, int misc_size) {
-  data_size_ = num_positions + num_velocities + lambda_size + misc_size;
-  this->DeclareVectorInputPort("x, xdot, lambda, misc",
+                    int lambda_size, int misc_size, int num_input) {
+  data_size_ = num_positions + num_velocities + lambda_size + misc_size + num_input;
+  this->DeclareVectorInputPort("x, xdot, lambda, misc, input",
                                TimestampedVector<double>(data_size_));
   this->DeclareAbstractOutputPort("lcmt_c3",
                                   &RobotC3Sender::OutputC3);

@@ -190,9 +190,23 @@ def processing_callback(data, channel):
         velocity = np.vstack(velocity).T
         effort = np.vstack(effort).T
         acceleration = np.vstack(acceleration).T
-        timestamp_state = np.array(t)
+        timestamp_state = np.array(t) * 1e-6
 
         return position, velocity, effort ,acceleration, timestamp_state
+
+    if channel == "CONTROLLER_INPUT":
+        c3_input = []
+        t = []
+        for msg in data[channel]:
+            # for each time instant, stack up the corresponding data
+            # t is in microseconds
+            t.append(msg.utime)
+            data = np.array(msg.data)
+            c3_input.append(data[-3:])
+        c3_input = np.vstack(c3_input).T
+        timestamp_input = np.array(t) * 1e-6
+
+        return c3_input, timestamp_input
 
     if channel == "CONTACT_RESULTS":
         contact_force_eeball = []
@@ -258,8 +272,8 @@ def processing_callback(data, channel):
         contact_force_ballg = np.vstack(contact_force_ballg).T
         contact_point_ballg = np.vstack(contact_point_ballg).T
         contact_normal_ballg = np.vstack(contact_normal_ballg).T
-    return contact_force_eeball,contact_point_eeball,contact_normal_eeball,\
-           contact_force_ballg,contact_point_ballg,contact_normal_ballg, timestamp_contact
+        return contact_force_eeball,contact_point_eeball,contact_normal_eeball,\
+               contact_force_ballg,contact_point_ballg,contact_normal_ballg, timestamp_contact
 
 
 
@@ -276,11 +290,11 @@ def main():
     logfile = "lcmlog-{}".format(log_num)
     log = lcm.EventLog(logfile, "r")
     print_log_summary(logfile, log)
-
-    log = lcm.EventLog(logfile, "r")
     # # controller input test
-    # get_log_data(log, channels, -1, processing_callback, "CONTROLLER_INPUT")
+    log = lcm.EventLog(logfile, "r")
+    c3_input, timestamp_c3input = get_log_data(log, channels, -1, processing_callback, "CONTROLLER_INPUT")
     # get the states and inputs
+    log = lcm.EventLog(logfile, "r")
     position, velocity, effort ,acceleration, timestamp_state = get_log_data(log, channels, -1, processing_callback, "FRANKA_OUTPUT")
 
     # # briefly check the result
@@ -314,13 +328,25 @@ def main():
     scipy.io.savemat(mat_file, mdic_state_input)
     '''
 
+    # Creating save file for c3 input
+    print("creating c3 input mat and npz files")
+    mdic_state_input = {"c3_input":c3_input, "timestamp_c3input": timestamp_c3input}
+    # # save as mat file (matlab)
+    # mat_file = "C3_Input-{}.mat".format(log_num)
+    # scipy.io.savemat(mat_file, mdic_state_input)
+    # save as npz file (numpy array)
+    npz_file = "C3_Input-{}.npz".format(log_num)
+    np.savez(npz_file,**mdic_state_input)
+    print("finished creating c3 input file")
+
     # Creating save file for states and inputs
     print("creating state/input mat and npz files")
     mdic_state_input = {"q": position[0:7,:],"R_b": position[7:11,:],"p_b": position[11:,:],"q_dot":velocity[0:7,:],\
                              "w_b": velocity[7:10,:],"v_b": velocity[10:,:], "u":effort, "a":acceleration, "timestamp_state": timestamp_state}
+    # # save as mat file (matlab)
+    # mat_file = "State_Input-{}.mat".format(log_num)
+    # scipy.io.savemat(mat_file, mdic_state_input)
     # save as npz file (numpy array)
-    mat_file = "State_Input-{}.mat".format(log_num)
-    scipy.io.savemat(mat_file, mdic_state_input)
     npz_file = "State_Input-{}.npz".format(log_num)
     np.savez(npz_file,**mdic_state_input)
     print("finished creating state/input file")
@@ -329,11 +355,12 @@ def main():
     print("creating contact force mat and npz files")
     mdic_contact ={"f_eeball":contact_force_eeball,"p_eeball":contact_point_eeball,"n_eeball":contact_normal_eeball,\
                    "f_ballg":contact_force_ballg,"p_ballg":contact_point_ballg,"n_ballg":contact_normal_ballg, "timestamp_contact":timestamp_contact}
-    mat_file = "Contact_Info-{}.mat".format(log_num)
-    scipy.io.savemat(mat_file, mdic_contact)
+    # # save as mat file (matlab)
+    # mat_file = "Contact_Info-{}.mat".format(log_num)
+    # scipy.io.savemat(mat_file, mdic_contact)
+    # save as npz file (numpy array)
     npz_file = "Contact_Info-{}.npz".format(log_num)
     np.savez(npz_file, **mdic_contact)
-
     print("finished creating contact force file")
 
 

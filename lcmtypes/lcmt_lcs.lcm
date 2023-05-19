@@ -1,0 +1,20 @@
+package dairlib;
+
+struct lcmt_lcs
+{
+  int64_t utime;
+  int16_t num_state;
+  int16_t num_velocity;
+  int16_t num_control;
+  int16_t num_lambda;
+
+  double A[num_velocity][num_state];
+  double B[num_velocity][num_control];
+  double D[num_velocity][num_lambda];
+  double d[num_velocity][num_lambda];
+
+  double E[num_lambda][num_state];
+  double F[num_lambda][num_lambda];
+  double H[num_lambda][num_control];
+  double c[num_lambda];
+}

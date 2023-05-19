@@ -36,7 +36,7 @@
     </visual>
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="0.06"/>
+      <mass value="0.01"/>
     </inertial>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
