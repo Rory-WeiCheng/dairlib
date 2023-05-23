@@ -64,6 +64,8 @@ cc_library(
     deps = [
         "//multibody/kinematic",
         "//multibody:geom_geom_collider",
+        "//lcmtypes:lcmt_robot",
+        "//common:eigen_utils",
         "@drake//:drake_shared_library",
     ],
 )

@@ -92,7 +92,7 @@ int DoMain(int argc, char* argv[]){
   plant_f.WeldFrames(plant_f.world_frame(), plant_f.GetFrameByName("base_link"), X_WI_f);
   plant_f.Finalize();
 
-  std::unique_ptr<MultibodyPlant<drake::AutoDiffXd>> plant_ad_f = 
+  std::unique_ptr<MultibodyPlant<drake::AutoDiffXd>> plant_ad_f =
     drake::systems::System<double>::ToAutoDiffXd(plant_f);
   auto context_ad_f = plant_ad_f->CreateDefaultContext();
   auto diagram_f = builder_f.Build();
@@ -306,18 +306,6 @@ int DoMain(int argc, char* argv[]){
 
   auto state_receiver = builder.AddSystem<systems::RobotOutputReceiver>(plant_franka);
 
-//  // load the matrices and create LCS object
-//  MatrixXd A_res = readCSV("examples/franka_trajectory_following/parameters/res_warm_start/A_res.csv");
-//  MatrixXd B_res = readCSV("examples/franka_trajectory_following/parameters/res_warm_start/B_res.csv");
-//  MatrixXd D_res = readCSV("examples/franka_trajectory_following/parameters/res_warm_start/D_res.csv");
-//  MatrixXd d_res_m = readCSV("examples/franka_trajectory_following/parameters/res_warm_start/d_res.csv");
-//  VectorXd d_res = Map<VectorXd>(d_res_m.data(), d_res_m.cols()*d_res_m.rows());
-//  MatrixXd E_res = readCSV("examples/franka_trajectory_following/parameters/res_warm_start/E_res.csv");
-//  MatrixXd F_res = readCSV("examples/franka_trajectory_following/parameters/res_warm_start/F_res.csv");
-//  MatrixXd H_res = readCSV("examples/franka_trajectory_following/parameters/res_warm_start/H_res.csv");
-//  MatrixXd c_res_m = readCSV("examples/franka_trajectory_following/parameters/res_warm_start/c_res.csv");
-//  VectorXd c_res = Map<VectorXd>(c_res_m.data(), c_res_m.cols()*c_res_m.rows());
-
   MatrixXd A_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/A_res.csv");
   MatrixXd B_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/B_res.csv");
   MatrixXd D_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/D_res.csv");
@@ -341,8 +329,16 @@ int DoMain(int argc, char* argv[]){
                                   num_friction_directions, mu, Q, R, G, U, 
                                   xdesired, pp, Res);
   auto state_force_sender = builder.AddSystem<systems::RobotC3Sender>(14, 9, 6, 9, 3);
+  auto lcs_receiver = builder.AddSystem<systems::RobotLCSReceiver>();
 
-  builder.Connect(state_receiver->get_output_port(0), controller->get_input_port(0));    
+  builder.Connect(state_receiver->get_output_port(0), controller->get_input_port(0));
+
+  // lcs subscriber to taken in the lcm message about residual lcs and connect port
+  auto lcs_subscriber = builder.AddSystem(LcmSubscriberSystem::Make<dairlib::lcmt_lcs>(
+      "RESIDUAL_LCS", &drake_lcm));
+  builder.Connect(lcs_subscriber->get_output_port(0), lcs_receiver->get_input_port(0));
+
+  builder.Connect(lcs_receiver->get_output_port(0), controller->get_input_port(1));
   builder.Connect(controller->get_output_port(), state_force_sender->get_input_port(0));
 
   // determine if ttl 0 or 1 should be used for publishing

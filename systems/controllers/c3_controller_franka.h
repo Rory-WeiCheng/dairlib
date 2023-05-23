@@ -89,6 +89,7 @@ class C3Controller_franka : public LeafSystem<double> {
       const Eigen::Vector3d& endeffector, const Eigen::Vector3d& estimate) const;
 
   int state_input_port_;
+  int lcs_input_port_;
   int state_output_port_;
   const MultibodyPlant<double>& plant_;
   MultibodyPlant<double>& plant_f_;

@@ -77,6 +77,25 @@ cc_binary(
             "@drake//manipulation/models/franka_description:models"]
 )
 
+cc_binary(
+    name = "lcm_adaptive_test",
+    srcs = ["lcm_adaptive_test.cc"],
+    deps = [
+        "//systems:robot_lcm_systems",
+        "//systems/controllers",
+        "//systems/framework:lcm_driven_loop",
+        "//systems/controllers:residual_learner",
+        "//examples/franka_trajectory_following:c3_parameters",
+        "//systems:system_utils",
+        "//common:file_utils",
+        "//solvers:lcs",
+        "@drake//:drake_shared_library",
+        "@gflags",
+    ],
+    data = [":trifinger_urdf",
+            "@drake//manipulation/models/franka_description:models"]
+)
+
 # cc_binary(
 #    name = "run_impedance_experiment",
 #    srcs = ["run_impedance_experiment.cc"],

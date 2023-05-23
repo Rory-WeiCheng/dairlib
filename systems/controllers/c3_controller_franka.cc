@@ -44,6 +44,7 @@ std::vector<Eigen::Vector3d> move_to_initial_position(
 
 namespace dairlib {
 namespace systems {
+using solvers::LCS;
 namespace controllers {
 
 C3Controller_franka::C3Controller_franka(
@@ -118,6 +119,15 @@ C3Controller_franka::C3Controller_franka(
               OutputVector<double>(14, 13, 7))
           .get_index();
 
+  // create an object before declaring the AbstractInputPort
+  // lcs input port
+  LCS Res_LCS;
+  lcs_input_port_ =
+      this->DeclareAbstractInputPort(
+              "Res_LCS",
+              drake::Value<LCS>(Res_LCS))
+          .get_index();
+
 
   state_output_port_ = this->DeclareVectorOutputPort(
           "xee, xball, xee_dot, xball_dot, lambda, visualization, ",
@@ -146,13 +156,13 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
   auto robot_output = (OutputVector<double>*)this->EvalVectorInput(context, state_input_port_);
   double timestamp = robot_output->get_timestamp();
 
-
+  // get residual lcs values
+  auto residual_lcs = EvalAbstractInput(context, lcs_input_port_)->get_value<LCS>();
 
   if (!received_first_message_){
     received_first_message_ = true;
     first_message_time_ = timestamp;
   }
-
 
   // parse some useful values
   double roll_phase = param_.roll_phase;
@@ -391,7 +401,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
 
   auto system_scaling_pair = solvers::LCSFactoryFranka::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
-      num_friction_directions_, mu_, 0.1, Res_);
+      num_friction_directions_, mu_, 0.1, residual_lcs);
 
   solvers::LCS system_ = system_scaling_pair.first;
   // double scaling = system_scaling_pair.second;
@@ -466,7 +476,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   ///calculate state and force
   auto system_scaling_pair2 = solvers::LCSFactoryFranka::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
-      num_friction_directions_, mu_, dt, Res_);
+      num_friction_directions_, mu_, dt, residual_lcs);
 
   solvers::LCS system2_ = system_scaling_pair2.first;
   double scaling2 = system_scaling_pair2.second;

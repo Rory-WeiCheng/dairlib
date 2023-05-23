@@ -10,6 +10,8 @@
 #include "dairlib/lcmt_robot_input.hpp"
 #include "dairlib/lcmt_robot_output.hpp"
 
+#include "solvers/lcs.h"
+
 namespace dairlib {
 namespace systems {
 
@@ -21,8 +23,10 @@ using drake::systems::lcm::LcmPublisherSystem;
 using drake::systems::lcm::LcmSubscriberSystem;
 using drake::systems::LeafSystem;
 using Eigen::VectorXd;
+using Eigen::MatrixXd;
 using std::string;
 using systems::OutputVector;
+using solvers::LCS;
 
 /*--------------------------------------------------------------------------*/
 // methods implementation for RobotOutputReceiver.
@@ -317,6 +321,42 @@ void RobotC3Sender::OutputC3(
     }
   }
 }
+
+/*--------------------------------------------------------------------------*/
+// methods implementation for LCSSender. Currently mainly used to carry the
+// residual LCS, can be extended to other usage in the future
+
+RobotLCSSender::RobotLCSSender() {
+  LCS Res_LCS;
+  this->DeclareAbstractInputPort("Residual LCS",
+                                 drake::Value<LCS>(Res_LCS));
+  this->DeclareAbstractOutputPort("lcmt_lcs",
+                                  &RobotLCSSender::OutputLCS);
+}
+
+void RobotLCSSender::OutputLCS(
+    const Context<double>& context,
+    dairlib::lcmt_lcs* lcs_msg) const {
+  auto lcs = EvalAbstractInput(context, 0)->get_value<LCS>();
+  lcs.CopyLCSToLcm(lcs_msg);
+}
+
+/*--------------------------------------------------------------------------*/
+// methods implementation for LCSReceiver. Currently mainly used to carry the
+// residual LCS, can be extended to other usage in the future
+RobotLCSReceiver::RobotLCSReceiver() {
+  this->DeclareAbstractInputPort("lcmt_lcs",
+                                 drake::Value<lcmt_lcs>());
+  this->DeclareAbstractOutputPort("Residual LCS",
+                                  &RobotLCSReceiver::CopyLCSOut);
+}
+
+void RobotLCSReceiver::CopyLCSOut(
+    const Context<double>& context, LCS* lcs) const {
+  auto lcs_msg = EvalAbstractInput(context, 0)->get_value<lcmt_lcs>();
+  *lcs = LCS::CopyLCSFromLcm(lcs_msg);
+}
+
 
 SubvectorPassThrough<double>* AddActuationRecieverAndStateSenderLcm(
     drake::systems::DiagramBuilder<double>* builder,

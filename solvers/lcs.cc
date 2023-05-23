@@ -1,4 +1,5 @@
 #include "solvers/lcs.h"
+#include "common/eigen_utils.h"
 
 #include "drake/solvers/mathematical_program.h"
 #include "drake/solvers/moby_lcp_solver.h"
@@ -113,6 +114,77 @@ VectorXd LCS::Simulate(VectorXd& x_init, VectorXd& input) {
 
 
   return x_final;
+}
+
+/// methods to move the LCS type back and forth from LCM, used for RobotLCSSender and any of the plant port
+/// that need to declare a Abstract input of LCS class, currently mainly used to send the residual lcs
+
+/// CopyLCSToLcm: used in the LCS sender, grab the matrices out from LCS class and send them to lcm type
+void LCS::CopyLCSToLcm(lcmt_lcs *lcs_msg) const {
+  lcs_msg->num_state = A_[0].cols();
+  lcs_msg->num_velocity = A_[0].rows();
+  lcs_msg->num_control = B_[0].cols();
+  lcs_msg->num_lambda = D_[0].cols();
+
+  for (int i = 0; i < A_[0].rows(); i++) {
+      lcs_msg->A.push_back(
+          CopyVectorXdToStdVector(A_[0].block(i, 0, 1, A_[0].cols()).transpose())
+      );
+      lcs_msg->B.push_back(
+          CopyVectorXdToStdVector(B_[0].block(i, 0, 1, B_[0].cols()).transpose())
+      );
+      lcs_msg->D.push_back(
+          CopyVectorXdToStdVector(D_[0].block(i, 0, 1, D_[0].cols()).transpose())
+      );
+    }
+  lcs_msg->d = CopyVectorXdToStdVector(d_[0]);
+
+  for (int i = 0; i < E_[0].rows(); i++) {
+      lcs_msg->E.push_back(
+          CopyVectorXdToStdVector(E_[0].block(i, 0, 1, E_[0].cols()).transpose())
+      );
+      lcs_msg->F.push_back(
+          CopyVectorXdToStdVector(F_[0].block(i, 0, 1, F_[0].cols()).transpose())
+      );
+      lcs_msg->H.push_back(
+          CopyVectorXdToStdVector(H_[0].block(i, 0, 1, H_[0].cols()).transpose())
+      );
+    }
+  lcs_msg->c = CopyVectorXdToStdVector(c_[0]);
+}
+
+/// OutputLCS: used in the LCS receiver, grab the data from lcm type, recover the matrixXD and form an LCS class
+LCS LCS::CopyLCSFromLcm(const lcmt_lcs& lcs_msg) {
+  int num_state = lcs_msg.num_state;
+  int num_velocity = lcs_msg.num_velocity;
+  int num_control = lcs_msg.num_control;
+  int num_lambda = lcs_msg.num_lambda;
+  int N = 1;
+
+  MatrixXd A = MatrixXd(num_velocity, num_state);
+  MatrixXd B = MatrixXd(num_velocity, num_control);
+  MatrixXd D = MatrixXd(num_velocity, num_lambda);
+
+  for (int i = 0; i < num_velocity; ++i) {
+    A.row(i) = VectorXd::Map(&lcs_msg.A[i][0], num_state);
+    B.row(i) = VectorXd::Map(&lcs_msg.B[i][0], num_control);
+    D.row(i) = VectorXd::Map(&lcs_msg.D[i][0], num_lambda);
+  }
+  VectorXd d = VectorXd::Map(lcs_msg.d.data(), num_velocity);
+
+  MatrixXd E = MatrixXd(num_lambda, num_state);
+  MatrixXd F = MatrixXd(num_lambda, num_lambda);
+  MatrixXd H = MatrixXd(num_lambda, num_control);
+
+  for (int i = 0; i < num_lambda; ++i) {
+    E.row(i) = VectorXd::Map(&lcs_msg.E[i][0], num_state);
+    F.row(i) = VectorXd::Map(&lcs_msg.F[i][0], num_lambda);
+    H.row(i) = VectorXd::Map(&lcs_msg.H[i][0], num_control);
+  }
+  VectorXd c = VectorXd::Map(lcs_msg.c.data(), num_lambda);
+
+  LCS lcs(A, B, D, d, E, F, H, c, N);
+  return lcs;
 }
 
 }  // namespace solvers

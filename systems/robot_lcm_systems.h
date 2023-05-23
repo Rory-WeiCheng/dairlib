@@ -7,6 +7,7 @@
 #include "dairlib/lcmt_robot_input.hpp"
 #include "dairlib/lcmt_robot_output.hpp"
 #include "dairlib/lcmt_c3.hpp"
+#include "dairlib/lcmt_lcs.hpp"
 #include "systems/framework/output_vector.h"
 #include "systems/framework/timestamped_vector.h"
 #include "systems/primitives/subvector_pass_through.h"
@@ -14,6 +15,8 @@
 #include "drake/multibody/plant/multibody_plant.h"
 #include "drake/systems/framework/leaf_system.h"
 #include "drake/systems/lcm/lcm_interface_system.h"
+
+#include "solvers/lcs.h"
 
 namespace dairlib {
 namespace systems {
@@ -145,17 +148,28 @@ class RobotC3Sender : public drake::systems::LeafSystem<double> {
   int data_size_;
 };
 
-/// Add the new RobotLCSSender class
-/// Receives the output matrices of the LCS learner, and outputs it as an LCM
-/// message with type lcmt_lcs Its output port is usually connected to
-/// an LcmPublisherSystem to publish the messages it generates.
-//class RobotLCSSender : public drake::systems::LeafSystem<double> {
-// public:
-//  explicit RobotLCSSender();
-//
-//  private:
-//}
+/// Add the new RobotLCSReceiver class
+/// Receives the output of an LcmSubsriberSystem that subsribes to the LCS output
+/// channel with LCM type lcmt_lcs and outputs the LCS system matrices (LCS class)
+class RobotLCSReceiver : public drake::systems::LeafSystem<double> {
+ public:
+  explicit RobotLCSReceiver();
+ private:
+  void CopyLCSOut(const drake::systems::Context<double>& context,
+                    solvers::LCS* lcs) const;
+};
 
+/// Add the new RobotLCSSender class
+/// Receives the LCS system matrices (LCS class), and outputs it as an LCM message
+/// with type lcmt_lcs Its output port is usually connected to an LcmPublisherSystem
+/// to publish the messages it generates.
+class RobotLCSSender : public drake::systems::LeafSystem<double> {
+ public:
+  explicit RobotLCSSender();
+ private:
+  void OutputLCS(const drake::systems::Context<double>& context,
+                      dairlib::lcmt_lcs* lcs_msg) const;
+};
 
 
 /// Convenience method to add and connect leaf systems for controlling

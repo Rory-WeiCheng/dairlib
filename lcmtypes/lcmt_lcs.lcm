@@ -1,8 +1,8 @@
 package dairlib;
-
+/*  lcmtype that carries the LCS matrices
+*/
 struct lcmt_lcs
 {
-  int64_t utime;
   int16_t num_state;
   int16_t num_velocity;
   int16_t num_control;
@@ -11,7 +11,7 @@ struct lcmt_lcs
   double A[num_velocity][num_state];
   double B[num_velocity][num_control];
   double D[num_velocity][num_lambda];
-  double d[num_velocity][num_lambda];
+  double d[num_velocity];
 
   double E[num_lambda][num_state];
   double F[num_lambda][num_lambda];

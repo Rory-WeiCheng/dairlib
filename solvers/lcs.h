@@ -6,6 +6,7 @@
 
 #include "drake/common/sorted_pair.h"
 #include "drake/multibody/plant/multibody_plant.h"
+#include "dairlib/lcmt_lcs.hpp"
 
 namespace dairlib {
 namespace solvers {
@@ -16,6 +17,7 @@ class LCS {
   /// \lambda_k + d_k
   /// @param E, F, H, c Complementarity constraints  0 <= \lambda_k \perp E_k
   /// x_k + F_k \lambda_k  + H_k u_k + c_k
+  LCS() = default;
   LCS(const std::vector<Eigen::MatrixXd>& A,
       const std::vector<Eigen::MatrixXd>& B,
       const std::vector<Eigen::MatrixXd>& D,
@@ -35,17 +37,19 @@ class LCS {
   /// @param x_init Initial x value
   /// @param input Input value
   Eigen::VectorXd Simulate(Eigen::VectorXd& x_init, Eigen::VectorXd& input);
+  void CopyLCSToLcm(lcmt_lcs* lcs_msg) const;
+  static LCS CopyLCSFromLcm(const lcmt_lcs& lcs_msg);
 
  public:
-  const std::vector<Eigen::MatrixXd> A_;
-  const std::vector<Eigen::MatrixXd> B_;
-  const std::vector<Eigen::MatrixXd> D_;
-  const std::vector<Eigen::VectorXd> d_;
-  const std::vector<Eigen::MatrixXd> E_;
-  const std::vector<Eigen::MatrixXd> F_;
-  const std::vector<Eigen::MatrixXd> H_;
-  const std::vector<Eigen::VectorXd> c_;
-  const int N_;
+  std::vector<Eigen::MatrixXd> A_;
+  std::vector<Eigen::MatrixXd> B_;
+  std::vector<Eigen::MatrixXd> D_;
+  std::vector<Eigen::VectorXd> d_;
+  std::vector<Eigen::MatrixXd> E_;
+  std::vector<Eigen::MatrixXd> F_;
+  std::vector<Eigen::MatrixXd> H_;
+  std::vector<Eigen::VectorXd> c_;
+  int N_;
 };
 
 }  // namespace solvers

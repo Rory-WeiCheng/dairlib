@@ -93,6 +93,23 @@ cc_library(
 )
 
 cc_library(
+    name = "residual_learner",
+    srcs = [
+        "residual_learner.cc",
+    ],
+    hdrs = [
+        "residual_learner.h",
+    ],
+    deps = [
+        "//examples/franka_trajectory_following:c3_parameters",
+        "//systems/framework:vector",
+        "//solvers:c3",
+        "//solvers:lcs",
+        "@drake//:drake_shared_library",
+    ],
+)
+
+cc_library(
     name = "affine_controller",
     srcs = [
         "affine_controller.cc",
