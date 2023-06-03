@@ -1,0 +1,31 @@
+# -*- mode: python -*-
+# vi: set ft=python :
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "trifinger_urdf",
+    data = glob([
+    	"robot_properties_fingers/urdf/**",
+    	"robot_properties_fingers/urdf/pro/**",
+    	"robot_properties_fingers/urdf/edu/**",
+    	"robot_properties_fingers/meshes/**",
+    	"robot_properties_fingers/meshes/pro/**",
+    	"robot_properties_fingers/meshes/pro/detailed/**",
+    	"robot_properties_fingers/meshes/edu/**",
+        "robot_properties_fingers/cube/**"])
+)
+
+
+py_binary(
+    name = "lcm_adaptive_test",
+    srcs = ["lcm_adaptive_test.py"],
+    deps = [
+        "//bindings/pydairlib",
+        "@drake//bindings/pydrake",
+        "//bindings/pydairlib/lcm",
+    ],
+    data = [":trifinger_urdf",
+            "@drake//manipulation/models/franka_description:models"],
+)
+

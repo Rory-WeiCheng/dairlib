@@ -53,6 +53,7 @@ cc_library(
         "lcs_factory.cc",
         "lcs_factory_franka.cc",
         "lcs_factory_franka_new.cc",
+        "lcs_factory_franka_ref.cc",
     ],
     hdrs = [
         "lcs.h",
@@ -60,10 +61,27 @@ cc_library(
         "lcs_factory.h",
         "lcs_factory_franka.h",
         "lcs_factory_franka_new.h",
+        "lcs_factory_franka_ref.h",
     ],
     deps = [
         "//multibody/kinematic",
         "//multibody:geom_geom_collider",
+        "//lcmtypes:lcmt_robot",
+        "//common:eigen_utils",
+        "@drake//:drake_shared_library",
+    ],
+)
+
+cc_library(
+    name = "learning_data",
+    srcs = [
+        "learning_data.cc",
+    ],
+    hdrs = [
+        "learning_data.h",
+    ],
+    deps = [
+        ":lcs",
         "//lcmtypes:lcmt_robot",
         "//common:eigen_utils",
         "@drake//:drake_shared_library",

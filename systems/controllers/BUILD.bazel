@@ -76,6 +76,24 @@ cc_library(
 )
 
 cc_library(
+    name = "data_generator",
+    srcs = [
+        "data_generator.cc",
+    ],
+    hdrs = [
+        "data_generator.h",
+    ],
+    deps = [
+        "//examples/franka_trajectory_following:c3_parameters",
+        "//systems/framework:vector",
+        "//solvers:lcs",
+        "//solvers:learning_data",
+        "@drake//:drake_shared_library",
+    ],
+)
+
+
+cc_library(
     name = "impedance_controller",
     srcs = [
         "impedance_controller.cc",

@@ -3,7 +3,7 @@ from pydrake.all import (AbstractValue, DiagramBuilder, DrakeLcm, LeafSystem,
                          MultibodyPlant, Parser, RigidTransform, Subscriber,
                          LcmPublisherSystem, TriggerType, AddMultibodyPlantSceneGraph,
                          LcmInterfaceSystem)
-from pydairlib.systems import (lcs_new,lcs_factory_franka_new)
+from pydairlib.solvers import (lcs_new,lcs_factory_franka_new)
 
 # newly added
 from pydrake.multibody.tree import JacobianWrtVariable,MultibodyForces_
@@ -105,8 +105,8 @@ context_f = diagram_f.GetMutableSubsystemContext(plant_f, diagram_context)
 # initialize the diagram builder: builder_franka
 builder_franka = DiagramBuilder()
 sim_dt = 1e-4
-sample_dt = 1e-2
-sample_step = 100 # link with sample_dt
+sample_dt = 1e-4
+sample_step = sample_dt ** -1 # link with sample_dt
 
 # Adds both MultibodyPlant: plant_franka and the SceneGraph: scene_graph, and wires them together.
 # this plant_franka mainly is used contain the whole franka instead of simple end-effector
@@ -138,9 +138,9 @@ context_franka = diagram_franka.GetMutableSubsystemContext(plant_franka, diagram
 # load the data
 # logdir, log_num = get_most_recent_logs()
 # logdir = "/usr/rory-workspace/data/experiment_logs/2023/04_23_23"
-# logdir = "/usr/rory-workspace/data/experiment_logs/2023/05_10_23"
-logdir = "/usr/rory-workspace/data/experiment_logs/2023/05_19_23"
-for i in range(1):
+# logdir = "/usr/rory-workspace/data/experiment_logs/2023/05_11_23"
+logdir = "/usr/rory-workspace/data/experiment_logs/2023/05_25_23"
+for i in range(20):
 
     # ---------------------------------------------- load data --------------------------------------------------------#
     start_time = time.time()
@@ -220,14 +220,37 @@ for i in range(1):
 
     # import matplotlib.pyplot as plt
     # plt.figure(figsize = (24,16))
-    # plt.plot(timestamp_c3input,u_C3_data_raw[0,:],marker = 'o')
-    # plt.plot(time_unified,u_C3_data[0,:],marker = 'o')
+    # plt.plot(timestamp_c3input,u_C3_data_raw[0,:],marker = 'o',label='raw data')
+    # plt.plot(time_unified,u_C3_data[0,:],marker = 'o',label='zeroth order hold alignment')
+    # plt.title('zeroth order hold for C3 input')
+    # plt.legend(fontsize=20)
     # plt.figure(figsize = (24,16))
-    # plt.plot(timestamp_c3input,u_C3_data_raw[1,:],marker = 'o')
-    # plt.plot(time_unified,u_C3_data[1,:],marker = 'o')
+    # plt.plot(timestamp_c3input,u_C3_data_raw[1,:],marker = 'o',label='raw data')
+    # plt.plot(time_unified,u_C3_data[1,:],marker = 'o',label='zeroth order hold alignment')
+    # plt.title('zeroth order hold for C3 input')
+    # plt.legend(fontsize=20)
     # plt.figure(figsize = (24,16))
-    # plt.plot(timestamp_c3input,u_C3_data_raw[2,:],marker = 'o')
-    # plt.plot(time_unified,u_C3_data[2,:],marker = 'o')
+    # plt.plot(timestamp_c3input,u_C3_data_raw[2,:],marker = 'o',label='raw data')
+    # plt.plot(time_unified,u_C3_data[2,:],marker = 'o',label='zeroth order hold alignment')
+    # plt.title('zeroth order hold for C3 input')
+    # plt.legend(fontsize=20)
+    # plt.show()
+    #
+    # plt.figure(figsize = (24,16))
+    # plt.plot(timestamp_state,v_b_data_raw[0,:],marker = 'o',label='vbx raw data')
+    # plt.plot(time_unified,v_b_data[0,:],marker = 'o',label='vbx zeroth order hold alignment')
+    # plt.title('zeroth order hold for state')
+    # plt.legend(fontsize=20)
+    # plt.figure(figsize = (24,16))
+    # plt.plot(timestamp_state,v_b_data_raw[1,:],marker = 'o',label='vby raw data')
+    # plt.plot(time_unified,v_b_data[1,:],marker = 'o',label='vby zeroth order hold alignment')
+    # plt.title('zeroth order hold for state')
+    # plt.legend(fontsize=20)
+    # plt.figure(figsize = (24,16))
+    # plt.plot(timestamp_state,v_b_data_raw[2,:],marker = 'o',label='vbz raw data')
+    # plt.plot(time_unified,v_b_data[2,:],marker = 'o',label='vbz zeroth order hold alignment')
+    # plt.title('zeroth order hold for state')
+    # plt.legend(fontsize=20)
     # plt.show()
     # pdb.set_trace()
     # ------------------------------------------- list pre-definition -------------------------------------------------#
@@ -244,6 +267,7 @@ for i in range(1):
     x_list = []
     x_model_list = []
     x_AB_list = []
+    x_A_list = []
     u_list = []
     # also record the calculated lambda from solving the lcp
     lam_model_list = []
@@ -430,9 +454,13 @@ for i in range(1):
         H = System.H[0]
         c = System.c[0]
 
+        # lcs_test = lcs_new.LCSNew(A,B,D,d,E,F,H,c,1)
         # F_check = F + F.T
         # F_pos = np.all(np.linalg.eigvals(F + F.T) > 0)
         # F_eig = np.sort(np.linalg.eigvals(F + F.T))[0]
+
+        np.set_printoptions(linewidth=250)
+        # pdb.set_trace()
 
 
         A_list.append(A)
@@ -450,6 +478,8 @@ for i in range(1):
         # simulate the lcs and record the next state predicted by the model, called x_model
         x_model, lam_model = System.Simulate(state,u)
         x_AB = A @ state + B @ u + d
+        x_A = A @ state
+        # pdb.set_trace()
 
         # 2023.5.19 update, replace the ee part by our hand coded dynamics
         # vee_model = v_ee + sample_dt * a_ee_model
@@ -464,6 +494,7 @@ for i in range(1):
         x_list.append(state)
         u_list.append(u)
         x_AB_list.append(x_AB)
+        x_A_list.append(x_A)
         x_model_list.append(x_model)
         lam_model_list.append(lam_model)
 
@@ -472,6 +503,7 @@ for i in range(1):
     lam_model_all = np.array(lam_model_list)
     x_all = np.array(x_list)
     x_AB_all = np.array(x_AB_list)
+    x_A_all = np.array(x_A_list)
     u_all = np.array(u_list)
     # F_check_all = np.array(F_check_list)
     # F_eigen_all = np.array(F_eigen_list)
@@ -527,9 +559,9 @@ for i in range(1):
     # pdb.set_trace()
 
     # import matplotlib.pyplot as plt
-    record_aee_array = np.array(record_aee)
-    record_aee_model_array = np.array(record_aee_model)
-    record_aee_model_check_array = np.array(record_aee_model_check)
+    # record_aee_array = np.array(record_aee)
+    # record_aee_model_array = np.array(record_aee_model)
+    # record_aee_model_check_array = np.array(record_aee_model_check)
     # plt.figure(figsize=(24, 16))
     # plt.plot(record_aee_array[:, 0], label='a_eex from simulation')
     # plt.plot(record_aee_model_array[:, 0], label='a_eex using model')
@@ -551,227 +583,253 @@ for i in range(1):
     # pdb.set_trace()
     #
     #
-    # import matplotlib.pyplot as plt
-    # # briefly check the result
-    # ## ball position and velocity
-    # # ball position
+    import matplotlib.pyplot as plt
+    # briefly check the result
+    # ball position and velocity
+    # ball position
+    # state data number -1 = residual data number, only plot 1-N for prediction not 0-N
+    time_state = np.linspace(0, residual.shape[0], num=residual.shape[0]) / sample_step
+    time_residual = np.linspace(0,residual.shape[0],num = residual.shape[0])/sample_step
+
     # plt.figure(figsize = (24,16))
-    # plt.plot(x_all[1:,7]*100, label='ball x position actual')
-    # # plt.plot(x_model_all[:-1,7] * 100, label='ball x position predicted (full LCS)')
-    # plt.plot(x_AB_all[:-1,7]*100, label='ball x position predicted (only AB)')
+    # plt.plot(time_state,x_all[1:,7]*100, label='ball x position actual')
+    # # plt.plot(time_state,x_model_all[:-1,7]*100, label='ball x position predicted (full LCS)')
+    # plt.plot(time_state,x_AB_all[:-1,7]*100, label='ball x position predicted (only AB)')
     # plt.ylabel("position (cm)", fontsize=20)
-    # plt.xlabel("timestep k (every 0.1s)", fontsize=20)
+    # plt.xlabel("time", fontsize=20)
     # plt.legend(fontsize=20)
     # plt.xticks(size = 20)
     # plt.yticks(size = 20)
     # plt.show()
     #
     # plt.figure(figsize = (24,16))
-    # plt.plot(x_all[1:,8]*100, label='ball y position actual')
-    # # plt.plot(x_model_all[:-1,8] * 100, label='ball y position predicted (full LCS)')
-    # plt.plot(x_AB_all[:-1,8]*100, label='ball y position predicted (only AB)')
+    # plt.plot(time_state,x_all[1:,8]*100, label='ball y position actual')
+    # # plt.plot(time_state,x_model_all[:-1,8] * 100, label='ball y position predicted (full LCS)')
+    # plt.plot(time_state,x_AB_all[:-1,8]*100, label='ball y position predicted (only AB)')
     # plt.ylabel("position (cm)", fontsize=20)
-    # plt.xlabel("timestep k (every 0.1s)", fontsize=20)
+    # plt.xlabel("time", fontsize=20)
     # plt.legend(fontsize=20)
     # plt.xticks(size = 20)
     # plt.yticks(size = 20)
     # plt.show()
     #
     # plt.figure(figsize = (24,16))
-    # plt.plot(x_all[1:,9]*100, label='ball z position actual')
-    # # plt.plot(x_model_all[:-1,9] * 100, label='ball z position predicted (full LCS)')
-    # plt.plot(x_AB_all[:-1,9]*100, label='ball z position predicted (only AB)')
+    # plt.plot(time_state,x_all[1:,9]*100, label='ball z position actual')
+    # # plt.plot(time_state,x_model_all[:-1,9] * 100, label='ball z position predicted (full LCS)')
+    # plt.plot(time_state,x_AB_all[:-1,9]*100, label='ball z position predicted (only AB)')
     # plt.ylabel("position (cm)", fontsize=20)
-    # plt.xlabel("timestep k (every 0.1s)", fontsize=20)
+    # plt.xlabel("time", fontsize=20)
     # plt.legend(fontsize=20)
     # plt.xticks(size = 20)
     # plt.yticks(size = 20)
     # plt.show()
     #
     # plt.figure(figsize = (24,16))
-    # plt.plot(residual[:,7]*100, label='ball x position residual')
-    # plt.plot(residual[:,8]*100, label='ball y position residual')
-    # plt.plot(residual[:,9]*100, label='ball z position residual')
+    # plt.plot(time_residual,residual[:,7]*100, label='ball x position residual')
+    # plt.plot(time_residual,residual[:,8]*100, label='ball y position residual')
+    # plt.plot(time_residual,residual[:,9]*100, label='ball z position residual')
     # plt.ylabel("position residual (cm)", fontsize=20)
-    # plt.xlabel("timestep k (every 0.1s)", fontsize=20)
+    # plt.xlabel("time", fontsize=20)
     # plt.legend(fontsize=20)
     # plt.xticks(size = 20)
     # plt.yticks(size = 20)
     # plt.show()
-    #
+
     # # ball velocity
+    plt.figure(figsize = (24,16))
+    plt.plot(time_state,x_all[1:,16]*100, label='ball x velocity actual')
+    # plt.plot(time_state,x_model_all[:-1,16]*100, label='ball x velocity predicted (full LCS)')
+    plt.plot(time_state,x_AB_all[:-1,16]*100, label='ball x velocity predicted (only AB)')
+    plt.ylabel("velocity (cm/s)", fontsize=20)
+    plt.xlabel("time", fontsize=20)
+    plt.legend(fontsize=20)
+    plt.xticks(size = 20)
+    plt.yticks(size = 20)
+    plt.show()
+
+    plt.figure(figsize = (24,16))
+    plt.plot(time_state,x_all[1:,17]*100, label='ball y velocity actual')
+    # plt.plot(time_state,x_model_all[:-1,17] * 100, label='ball y velocity predicted (full LCS)')
+    plt.plot(time_state,x_AB_all[:-1,17]*100, label='ball y velocity predicted (only AB)')
+    plt.ylabel("velocity (cm/s)", fontsize=20)
+    plt.xlabel("time", fontsize=20)
+    plt.legend(fontsize=20)
+    plt.xticks(size = 20)
+    plt.yticks(size = 20)
+    plt.show()
+
     # plt.figure(figsize = (24,16))
-    # plt.plot(x_all[1:,16]*100, label='ball x velocity actual')
-    # # plt.plot(x_model_all[:-1,16]*100, label='ball x velocity predicted (full LCS)')
-    # plt.plot(x_AB_all[:-1,16]*100, label='ball x velocity predicted (only AB)')
+    # plt.plot(time_state,x_all[1:,18]*100, label='ball z velocity actual')
+    # # plt.plot(time_state,x_model_all[:-1,18]*100, label='ball z velocity predicted (full LCS)')
+    # plt.plot(time_state,x_AB_all[:-1,18]*100, label='ball z velocity predicted (only AB)')
     # plt.ylabel("velocity (cm/s)", fontsize=20)
-    # plt.xlabel("timestep k (every 0.1s)", fontsize=20)
+    # plt.xlabel("time", fontsize=20)
     # plt.legend(fontsize=20)
     # plt.xticks(size = 20)
     # plt.yticks(size = 20)
     # plt.show()
-    #
-    # plt.figure(figsize = (24,16))
-    # plt.plot(x_all[1:,17]*100, label='ball y velocity actual')
-    # # plt.plot(x_model_all[:-1,17] * 100, label='ball y velocity predicted (full LCS)')
-    # plt.plot(x_AB_all[:-1,17]*100, label='ball y velocity predicted (only AB)')
-    # plt.ylabel("velocity (cm/s)", fontsize=20)
-    # plt.xlabel("timestep k (every 0.1s)", fontsize=20)
-    # plt.legend(fontsize=20)
-    # plt.xticks(size = 20)
-    # plt.yticks(size = 20)
-    # plt.show()
-    #
-    # plt.figure(figsize = (24,16))
-    # plt.plot(x_all[1:,18]*100, label='ball z velocity actual')
-    # # plt.plot(x_model_all[:-1,18]*100, label='ball z velocity predicted (full LCS)')
-    # plt.plot(x_AB_all[:-1,18]*100, label='ball z velocity predicted (only AB)')
-    # plt.ylabel("velocity (cm/s)", fontsize=20)
-    # plt.xlabel("timestep k (every 0.1s)", fontsize=20)
-    # plt.legend(fontsize=20)
-    # plt.xticks(size = 20)
-    # plt.yticks(size = 20)
-    # plt.show()
-    #
-    # plt.figure(figsize = (24,16))
-    # plt.plot(residual[:,16]*100, label='ball x velocity residual')
-    # plt.plot(residual[:,17]*100, label='ball y velocity residual')
-    # plt.plot(residual[:,18]*100, label='ball z velocity residual')
-    # plt.ylabel("velocity residual (cm/s)", fontsize=20)
-    # plt.xlabel("timestep k (every 0.1s)", fontsize=20)
-    # plt.legend(fontsize=20)
-    # plt.xticks(size = 20)
-    # plt.yticks(size = 20)
-    # plt.show()
+
+    plt.figure(figsize = (24,16))
+    plt.plot(time_residual,residual[:,16]*100, label='ball x velocity residual')
+    plt.plot(time_residual,residual[:,17]*100, label='ball y velocity residual')
+    # plt.plot(time_residual,residual[:,18]*100, label='ball z velocity residual')
+    plt.ylabel("velocity residual (cm/s)", fontsize=20)
+    plt.xlabel("time", fontsize=20)
+    plt.legend(fontsize=20)
+    plt.xticks(size = 20)
+    plt.yticks(size = 20)
+    plt.show()
 
     ## ee position and velocity
     # ee position
-    import matplotlib.pyplot as plt
-    plt.figure(figsize = (24,16))
-    plt.plot(x_all[1:,0]*100, label='ee x position actual')
-    # plt.plot(x_model_all[:-1,0] * 100, label='ee x position predicted (full LCS)')
-    plt.plot(x_AB_all[:-1,0]*100, label='ee x position predicted (only AB)')
-    plt.ylabel("position (cm)", fontsize=20)
-    plt.xlabel("timestep k (every 0.1s)", fontsize=20)
-    plt.legend(fontsize=20)
-    plt.xticks(size = 20)
-    plt.yticks(size = 20)
-    plt.show()
-
-    plt.figure(figsize = (24,16))
-    plt.plot(x_all[1:,1]*100, label='ee y position actual')
-    # plt.plot(x_model_all[:-1,1] * 100, label='ee y position predicted (full LCS)')
-    plt.plot(x_AB_all[:-1,1]*100, label='ee y position predicted (only AB)')
-    plt.ylabel("position (cm)", fontsize=20)
-    plt.xlabel("timestep k (every 0.1s)", fontsize=20)
-    plt.legend(fontsize=20)
-    plt.xticks(size = 20)
-    plt.yticks(size = 20)
-    plt.show()
-
-    plt.figure(figsize = (24,16))
-    plt.plot(x_all[1:,2]*100, label='ee z position actual')
-    # plt.plot(x_model_all[:-1,2] * 100, label='ee z position predicted (full LCS)')
-    plt.plot(x_AB_all[:-1,2]*100, label='ee z position predicted (only AB)')
-    plt.ylabel("position (cm)", fontsize=20)
-    plt.xlabel("timestep k (every 0.1s)", fontsize=20)
-    plt.legend(fontsize=20)
-    plt.xticks(size = 20)
-    plt.yticks(size = 20)
-    plt.show()
-
-    plt.figure(figsize = (24,16))
-    plt.plot(residual[:,0]*100, label='x position residual')
-    plt.plot(residual[:,1]*100, label='y position residual')
-    plt.plot(residual[:,2]*100, label='z position residual')
-    plt.ylabel("position residual (cm)", fontsize=20)
-    plt.xlabel("timestep k (every 0.1s)", fontsize=20)
-    plt.legend(fontsize=20)
-    plt.xticks(size = 20)
-    plt.yticks(size = 20)
-    plt.show()
+    # import matplotlib.pyplot as plt
+    # plt.figure(figsize = (24,16))
+    # plt.plot(time_state,x_all[1:,0]*100, label='ee x position actual')
+    # # plt.plot(time_state,x_model_all[:-1,0] * 100, label='ee x position predicted (full LCS)')
+    # plt.plot(time_state,x_AB_all[:-1,0]*100, label='ee x position predicted (only AB)')
+    # plt.ylabel("position (cm)", fontsize=20)
+    # plt.xlabel("time", fontsize=20)
+    # plt.legend(fontsize=20)
+    # plt.xticks(size = 20)
+    # plt.yticks(size = 20)
+    # plt.show()
+    #
+    # plt.figure(figsize = (24,16))
+    # plt.plot(time_state,x_all[1:,1]*100, label='ee y position actual')
+    # # plt.plot(time_state,x_model_all[:-1,1] * 100, label='ee y position predicted (full LCS)')
+    # plt.plot(time_state,x_AB_all[:-1,1]*100, label='ee y position predicted (only AB)')
+    # plt.ylabel("position (cm)", fontsize=20)
+    # plt.xlabel("time", fontsize=20)
+    # plt.legend(fontsize=20)
+    # plt.xticks(size = 20)
+    # plt.yticks(size = 20)
+    # plt.show()
+    #
+    # plt.figure(figsize = (24,16))
+    # plt.plot(time_state,x_all[1:,2]*100, label='ee z position actual')
+    # # plt.plot(time_state,x_model_all[:-1,2] * 100, label='ee z position predicted (full LCS)')
+    # plt.plot(time_state,x_AB_all[:-1,2]*100, label='ee z position predicted (only AB)')
+    # plt.ylabel("position (cm)", fontsize=20)
+    # plt.xlabel("time", fontsize=20)
+    # plt.legend(fontsize=20)
+    # plt.xticks(size = 20)
+    # plt.yticks(size = 20)
+    # plt.show()
+    #
+    # plt.figure(figsize = (24,16))
+    # plt.plot(time_residual,residual[:,0]*100, label='x position residual')
+    # plt.plot(time_residual,residual[:,1]*100, label='y position residual')
+    # plt.plot(time_residual,residual[:,2]*100, label='z position residual')
+    # plt.ylabel("position residual (cm)", fontsize=20)
+    # plt.xlabel("time", fontsize=20)
+    # plt.legend(fontsize=20)
+    # plt.xticks(size = 20)
+    # plt.yticks(size = 20)
+    # plt.show()
 
     # ee velocity
     plt.figure(figsize = (24,16))
-    plt.plot(x_all[1:,10]*100, label='ee x velocity actual')
-    # plt.plot(x_model_all[:-1,10]*100, label='ee x velocity predicted (full LCS)')
-    plt.plot(x_AB_all[:-1,10]*100, label='ee x velocity predicted (only AB)')
+    plt.plot(time_state,x_all[1:,10]*100, label='ee x velocity actual')
+    # plt.plot(time_state,x_model_all[:-1,10]*100, label='ee x velocity predicted (full LCS)')
+    plt.plot(time_state,x_AB_all[:-1,10]*100, label='ee x velocity predicted (only AB)')
+    plt.plot(time_state,x_A_all[:-1,10] * 100, label='ee x velocity predicted (only A)')
     plt.ylabel("velocity (cm/s)", fontsize=20)
-    plt.xlabel("timestep k (every 0.1s)", fontsize=20)
+    plt.xlabel("time", fontsize=20)
     plt.legend(fontsize=20)
     plt.xticks(size = 20)
     plt.yticks(size = 20)
     plt.show()
 
     plt.figure(figsize = (24,16))
-    plt.plot(x_all[1:,11]*100, label='ee y velocity actual')
-    # plt.plot(x_model_all[:-1,1]*100, label='ee y velocity predicted (full LCS)')
-    plt.plot(x_AB_all[:-1,11]*100, label='ee y velocity predicted (only AB)')
+    plt.plot(time_state,x_all[1:,11]*100, label='ee y velocity actual')
+    # plt.plot(time_state,x_model_all[:-1,1]*100, label='ee y velocity predicted (full LCS)')
+    plt.plot(time_state,x_AB_all[:-1,11]*100, label='ee y velocity predicted (only AB)')
+    plt.plot(time_state,x_A_all[:-1,11] * 100, label='ee y velocity predicted (only A)')
     plt.ylabel("velocity (cm/s)", fontsize=20)
-    plt.xlabel("timestep k (every 0.01s)", fontsize=20)
+    plt.xlabel("time", fontsize=20)
     plt.legend(fontsize=20)
     plt.xticks(size = 20)
     plt.yticks(size = 20)
     plt.show()
 
-    plt.figure(figsize = (24,16))
-    plt.plot(x_all[1:,12]*100, label='ee z velocity actual')
-    # plt.plot(x_model_all[:-1,12]*100, label='ee z velocity predicted (full LCS)')
-    plt.plot(x_AB_all[:-1,12]*100, label='ee z velocity predicted (only AB)')
-    plt.ylabel("velocity (cm/s)", fontsize=20)
-    plt.xlabel("timestep k (every 0.01s)", fontsize=20)
-    plt.legend(fontsize=20)
-    plt.xticks(size = 20)
-    plt.yticks(size = 20)
-    plt.show()
+    # plt.figure(figsize = (24,16))
+    # plt.plot(time_state,x_all[1:,12]*100, label='ee z velocity actual')
+    # # plt.plot(time_state,x_model_all[:-1,12]*100, label='ee z velocity predicted (full LCS)')
+    # plt.plot(time_state,x_AB_all[:-1,12]*100, label='ee z velocity predicted (only AB)')
+    # plt.plot(time_state,x_A_all[:-1,12] * 100, label='ee z velocity predicted (only A)')
+    # plt.ylabel("velocity (cm/s)", fontsize=20)
+    # plt.xlabel("time", fontsize=20)
+    # plt.legend(fontsize=20)
+    # plt.xticks(size = 20)
+    # plt.yticks(size = 20)
+    # plt.show()
 
     plt.figure(figsize = (24,16))
-    plt.plot(residual[:,10]*100, label='ee x velocity residual')
-    plt.plot(residual[:,11]*100, label='ee y velocity residual')
-    plt.plot(residual[:,12]*100, label='ee z velocity residual')
+    plt.plot(time_residual, residual[:,10]*100, label='ee x velocity residual')
+    plt.plot(time_residual, residual[:,11]*100, label='ee y velocity residual')
+    # plt.plot(time_residual, residual[:,12]*100, label='ee z velocity residual')
     plt.ylabel("velocity residual (cm/s)", fontsize=20)
-    plt.xlabel("timestep k (every 0.01s)", fontsize=20)
+    plt.xlabel("time", fontsize=20)
     plt.legend(fontsize=20)
     plt.xticks(size = 20)
     plt.yticks(size = 20)
     plt.show()
 
+    #
+    # plt.figure(figsize = (24,16))
+    # plt.plot((x_all[2:,10]-x_all[1:-1,10])*100, label='ee x velocity difference')
+    # # plt.plot(x_model_all[:-1,12]*100, label='ee z velocity predicted (full LCS)')
+    # plt.plot((x_A_all[2:, 10] - x_A_all[1:-1, 10]) * 100, label='ee z velocity predicted (only A) difference')
+    # plt.plot((x_AB_all[2:,10]-x_AB_all[1:-1,10])*100, label='ee z velocity predicted (only AB) difference')
+    # # plt.plot(record_aee_array[:, 0], label='a_eez from simulation')
+    # # plt.plot(record_aee_model_array[:, 0], label='a_eez using model')
+    # plt.ylabel("velocity difference (cm/s)", fontsize=20)
+    # plt.xlabel("timestep k (every 0.01s)", fontsize=20)
+    # plt.legend(fontsize=20)
+    # plt.xticks(size = 20)
+    # plt.yticks(size = 20)
+    # plt.show()
+    #
+    # plt.figure(figsize = (24,16))
+    # plt.plot((x_all[2:,11]-x_all[1:-1,11])*100, label='ee y velocity difference')
+    # # plt.plot(x_model_all[:-1,12]*100, label='ee z velocity predicted (full LCS)')
+    # plt.plot((x_A_all[2:, 11] - x_A_all[1:-1, 11]) * 100, label='ee z velocity predicted (only A) difference')
+    # plt.plot((x_AB_all[2:,11]-x_AB_all[1:-1,11])*100, label='ee z velocity predicted (only AB) difference')
+    # # plt.plot(record_aee_array[:, 1], label='a_eez from simulation')
+    # # plt.plot(record_aee_model_array[:, 1], label='a_eez using model')
+    # plt.ylabel("velocity difference (cm/s)", fontsize=20)
+    # plt.xlabel("timestep k (every 0.01s)", fontsize=20)
+    # plt.legend(fontsize=20)
+    # plt.xticks(size = 20)
+    # plt.yticks(size = 20)
+    # plt.show()
+    #
+    # plt.figure(figsize = (24,16))
+    # plt.plot((x_all[2:,12]-x_all[1:-1,12])*100, label='ee z velocity difference')
+    # # plt.plot(x_model_all[:-1,12]*100, label='ee z velocity predicted (full LCS)')
+    # plt.plot((x_A_all[2:, 12] - x_A_all[1:-1, 12]) * 100, label='ee z velocity predicted (only A) difference')
+    # plt.plot((x_AB_all[2:,12]-x_AB_all[1:-1,12])*100, label='ee z velocity predicted (only AB) difference')
+    # # plt.plot(record_aee_array[:, 2], label='a_eez from simulation')
+    # # plt.plot(record_aee_model_array[:, 2], label='a_eez using model')
+    # plt.ylabel("velocity difference (cm/s)", fontsize=20)
+    # plt.xlabel("timestep k (every 0.01s)", fontsize=20)
+    # plt.legend(fontsize=20)
+    # plt.xticks(size = 20)
+    # plt.yticks(size = 20)
+    # plt.show()
 
-    plt.figure(figsize = (24,16))
-    plt.plot((x_all[2:,10]-x_all[1:-1,10])*100, label='ee z velocity difference')
-    # plt.plot(x_model_all[:-1,12]*100, label='ee z velocity predicted (full LCS)')
-    plt.plot((x_AB_all[2:,10]-x_AB_all[1:-1,10])*100, label='ee z velocity predicted (only AB) difference')
-    # plt.plot(record_aee_array[:, 0], label='a_eez from simulation')
-    # plt.plot(record_aee_model_array[:, 0], label='a_eez using model')
-    plt.ylabel("velocity difference (cm/s)", fontsize=20)
-    plt.xlabel("timestep k (every 0.01s)", fontsize=20)
-    plt.legend(fontsize=20)
-    plt.xticks(size = 20)
-    plt.yticks(size = 20)
-    plt.show()
+    # a_all = x_all[2:, :] - x_all[1:-1, :]
+    # a_AB_all = x_AB_all[1:-1, :] - x_AB_all[:-2, :]
+    # a_res = a_all - a_AB_all
+    # pdb.set_trace()
 
-    plt.figure(figsize = (24,16))
-    plt.plot((x_all[2:,11]-x_all[1:-1,11])*100, label='ee z velocity difference')
-    # plt.plot(x_model_all[:-1,12]*100, label='ee z velocity predicted (full LCS)')
-    plt.plot((x_AB_all[2:,11]-x_AB_all[1:-1,11])*100, label='ee z velocity predicted (only AB) difference')
-    # plt.plot(record_aee_array[:, 1], label='a_eez from simulation')
-    # plt.plot(record_aee_model_array[:, 1], label='a_eez using model')
-    plt.ylabel("velocity difference (cm/s)", fontsize=20)
-    plt.xlabel("timestep k (every 0.01s)", fontsize=20)
-    plt.legend(fontsize=20)
-    plt.xticks(size = 20)
-    plt.yticks(size = 20)
-    plt.show()
-
-    plt.figure(figsize = (24,16))
-    plt.plot((x_all[2:,12]-x_all[1:-1,12])*100, label='ee z velocity difference')
-    # plt.plot(x_model_all[:-1,12]*100, label='ee z velocity predicted (full LCS)')
-    plt.plot((x_AB_all[2:,12]-x_AB_all[1:-1,12])*100, label='ee z velocity predicted (only AB) difference')
-    # plt.plot(record_aee_array[:, 2], label='a_eez from simulation')
-    # plt.plot(record_aee_model_array[:, 2], label='a_eez using model')
-    plt.ylabel("velocity difference (cm/s)", fontsize=20)
-    plt.xlabel("timestep k (every 0.01s)", fontsize=20)
-    plt.legend(fontsize=20)
-    plt.xticks(size = 20)
-    plt.yticks(size = 20)
-    plt.show()
+    # plt.figure(figsize = (24,16))
+    # plt.plot(a_res[:,10]*100, label='ee x acceleration residual')
+    # plt.plot(a_res[:,11]*100, label='ee y acceleration residual')
+    # plt.plot(a_res[:,12]*100, label='ee z acceleration residual')
+    # plt.ylabel("acceleration residual (cm/s^2)", fontsize=20)
+    # plt.xlabel("timestep k (every 0.001s)", fontsize=20)
+    # plt.legend(fontsize=20)
+    # plt.xticks(size = 20)
+    # plt.yticks(size = 20)
+    # plt.show()

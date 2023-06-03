@@ -2,38 +2,12 @@
 
 #include <utility>
 #include <chrono>
-
-
-#include "external/drake/tools/install/libdrake/_virtual_includes/drake_shared_library/drake/common/sorted_pair.h"
-#include "external/drake/tools/install/libdrake/_virtual_includes/drake_shared_library/drake/multibody/plant/multibody_plant.h"
-#include "multibody/multibody_utils.h"
-#include "solvers/c3.h"
-#include "solvers/c3_miqp.h"
-#include "solvers/lcs_factory.h"
-#include "solvers/lcs.h"
-
-#include "drake/solvers/moby_lcp_solver.h"
-#include "multibody/geom_geom_collider.h"
-#include "multibody/kinematic/kinematic_evaluator_set.h"
-#include "drake/math/autodiff_gradient.h"
-
 using std::vector;
-
-using drake::AutoDiffVecXd;
-using drake::AutoDiffXd;
 using drake::MatrixX;
-using drake::SortedPair;
-using drake::geometry::GeometryId;
-using drake::multibody::MultibodyPlant;
 using drake::systems::Context;
-using drake::multibody::JacobianWrtVariable;
-using drake::math::RotationMatrix;
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
-using Eigen::Matrix3d;
-using Eigen::Vector3d;
-using Eigen::Quaterniond;
 
 namespace dairlib {
 namespace systems {

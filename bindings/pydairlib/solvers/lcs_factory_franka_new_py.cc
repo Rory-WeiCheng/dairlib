@@ -18,9 +18,9 @@ PYBIND11_MODULE(lcs_factory_franka_new, m) {
 //      .def("LinearizePlantToLCS", &LCSFactoryFrankaNew::LinearizePlantToLCS,
 //           py::arg("plant"), py::arg("context"), py::arg("plant_ad"), py::arg("context_ad"), py::arg("contact_geoms_orig"),
 //           py::arg("num_friction_directions"), py::arg("mu"), py::arg("dt"));
-    m.def("LinearizePlantToLCS", &LCSFactoryFrankaNew::LinearizePlantToLCS,
-           py::arg("plant"), py::arg("context"), py::arg("plant_ad"), py::arg("context_ad"), py::arg("contact_geoms_orig"),
-           py::arg("num_friction_directions"), py::arg("mu"), py::arg("dt"));
+  m.def("LinearizePlantToLCS", &LCSFactoryFrankaNew::LinearizePlantToLCS,
+         py::arg("plant"), py::arg("context"), py::arg("plant_ad"), py::arg("context_ad"), py::arg("contact_geoms_orig"),
+         py::arg("num_friction_directions"), py::arg("mu"), py::arg("dt"));
 }
 }  // namespace pydairlib
 }  // namespace dairlib

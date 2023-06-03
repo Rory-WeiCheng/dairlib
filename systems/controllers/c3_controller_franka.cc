@@ -130,7 +130,7 @@ C3Controller_franka::C3Controller_franka(
 
 
   state_output_port_ = this->DeclareVectorOutputPort(
-          "xee, xball, xee_dot, xball_dot, lambda, visualization, ",
+          "xee, xball, xee_dot, xball_dot, lambda, visualization, input",
           TimestampedVector<double>(41), &C3Controller_franka::CalcControl)
       .get_index();
 

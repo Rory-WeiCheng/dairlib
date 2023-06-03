@@ -306,16 +306,25 @@ int DoMain(int argc, char* argv[]){
 
   auto state_receiver = builder.AddSystem<systems::RobotOutputReceiver>(plant_franka);
 
-  MatrixXd A_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/A_res.csv");
-  MatrixXd B_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/B_res.csv");
-  MatrixXd D_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/D_res.csv");
-  MatrixXd d_res_m = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/d_res.csv");
-  VectorXd d_res = Map<VectorXd>(d_res_m.data(), d_res_m.cols()*d_res_m.rows());
-  MatrixXd E_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/E_res.csv");
-  MatrixXd F_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/F_res.csv");
-  MatrixXd H_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/H_res.csv");
-  MatrixXd c_res_m = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/c_res.csv");
-  VectorXd c_res = Map<VectorXd>(c_res_m.data(), c_res_m.cols()*c_res_m.rows());
+//  MatrixXd A_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/A_res.csv");
+//  MatrixXd B_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/B_res.csv");
+//  MatrixXd D_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/D_res.csv");
+//  MatrixXd d_res_m = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/d_res.csv");
+//  VectorXd d_res = Map<VectorXd>(d_res_m.data(), d_res_m.cols()*d_res_m.rows());
+//  MatrixXd E_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/E_res.csv");
+//  MatrixXd F_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/F_res.csv");
+//  MatrixXd H_res = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/H_res.csv");
+//  MatrixXd c_res_m = readCSV("examples/franka_trajectory_following/parameters/res_state_dep/c_res.csv");
+//  VectorXd c_res = Map<VectorXd>(c_res_m.data(), c_res_m.cols()*c_res_m.rows());
+
+  MatrixXd A_res = MatrixXd::Zero(9,19);
+  MatrixXd B_res = MatrixXd::Zero(9,3);
+  MatrixXd D_res = MatrixXd::Zero(9,12);
+  VectorXd d_res = VectorXd::Zero(9);
+  MatrixXd E_res = MatrixXd::Zero(12,19);
+  MatrixXd F_res = MatrixXd::Zero(12,12);
+  MatrixXd H_res = MatrixXd::Zero(12,3);
+  VectorXd c_res = VectorXd::Zero(12);
 
   int N_res = 1;
 //  std::cout<< "(" << D_res.rows() << ", " << D_res.cols() << ")"<<std::endl;

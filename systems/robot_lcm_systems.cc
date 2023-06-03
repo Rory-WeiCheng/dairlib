@@ -11,6 +11,8 @@
 #include "dairlib/lcmt_robot_output.hpp"
 
 #include "solvers/lcs.h"
+#include "solvers/learning_data.h"
+
 
 namespace dairlib {
 namespace systems {
@@ -27,6 +29,7 @@ using Eigen::MatrixXd;
 using std::string;
 using systems::OutputVector;
 using solvers::LCS;
+using solvers::LearningData;
 
 /*--------------------------------------------------------------------------*/
 // methods implementation for RobotOutputReceiver.
@@ -282,6 +285,7 @@ void RobotC3Receiver::CopyC3Out(const Context<double>& context,
   DRAKE_ASSERT(input != nullptr);
   const auto& input_msg = input->get_value<dairlib::lcmt_c3>();
   DRAKE_ASSERT(input_msg.data.size() == data_size_);
+  std::cout<< input_msg.data.size() << std::endl;
 
   VectorXd input_vector = VectorXd::Zero(data_size_);
   for (int i = 0; i < data_size_; i++) {
@@ -357,6 +361,23 @@ void RobotLCSReceiver::CopyLCSOut(
   *lcs = LCS::CopyLCSFromLcm(lcs_msg);
 }
 
+/*--------------------------------------------------------------------------*/
+// methods implementation for DataSender. Currently mainly used to carry the
+// dataset simplified model needs, very specific to ball rolling task
+RobotDataSender::RobotDataSender() {
+  LearningData DataSet;
+  this->DeclareAbstractInputPort("Learning Dataset",
+                                 drake::Value<LearningData>(DataSet));
+  this->DeclareAbstractOutputPort("lcmt_learning_data",
+                                  &RobotDataSender::OutputDataSet);
+}
+
+void RobotDataSender::OutputDataSet(
+    const Context<double>& context,
+    dairlib::lcmt_learning_data* data_msg) const {
+  auto data = EvalAbstractInput(context, 0)->get_value<LearningData>();
+  data.CopyLearningDataToLcm(data_msg);
+}
 
 SubvectorPassThrough<double>* AddActuationRecieverAndStateSenderLcm(
     drake::systems::DiagramBuilder<double>* builder,

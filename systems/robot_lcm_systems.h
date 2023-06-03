@@ -17,6 +17,7 @@
 #include "drake/systems/lcm/lcm_interface_system.h"
 
 #include "solvers/lcs.h"
+#include "solvers/learning_data.h"
 
 namespace dairlib {
 namespace systems {
@@ -169,6 +170,18 @@ class RobotLCSSender : public drake::systems::LeafSystem<double> {
  private:
   void OutputLCS(const drake::systems::Context<double>& context,
                       dairlib::lcmt_lcs* lcs_msg) const;
+};
+
+/// Add the new RobotDataSender class
+/// Receives the data set class, and outputs it as an LCM message
+/// with type lcmt_learning_data Its output port is usually connected to an LcmPublisherSystem
+/// to publish the messages it generates.
+class RobotDataSender : public drake::systems::LeafSystem<double> {
+ public:
+  explicit RobotDataSender();
+ private:
+  void OutputDataSet(const drake::systems::Context<double>& context,
+                 dairlib::lcmt_learning_data* data_msg) const;
 };
 
 

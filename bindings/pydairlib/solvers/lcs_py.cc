@@ -14,6 +14,7 @@ using solvers::LCS;
 PYBIND11_MODULE(lcs, m) {
   m.doc() = "Binding lcs basic class for lcs_factory_franka_new";
   py::class_<LCS>(m, "LCS")
+      .def(py::init<>())
       .def(py::init<const std::vector<Eigen::MatrixXd>&,const std::vector<Eigen::MatrixXd>&,
           const std::vector<Eigen::MatrixXd>&,const std::vector<Eigen::VectorXd>&,
           const std::vector<Eigen::MatrixXd>&,const std::vector<Eigen::MatrixXd>&,
@@ -34,8 +35,9 @@ PYBIND11_MODULE(lcs, m) {
       .def_readonly("H", &LCS::H_)
       .def_readonly("c", &LCS::c_)
       .def_readonly("N", &LCS::N_)
-      .def("Simulate", &LCS::Simulate,py::arg("x_init"), py::arg("input"));
-
+      .def("Simulate", &LCS::Simulate, py::arg("x_init"), py::arg("input"))
+      .def("CopyLCSToLcm", &LCS::CopyLCSToLcm, py::arg("lcs_msg"));
+  m.def("CopyLCSFromLcm", &LCS::CopyLCSFromLcm, py::arg("lcs_msg"));
 }
 }  // namespace pydairlib
 }  // namespace dairlib

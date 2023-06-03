@@ -91,43 +91,14 @@ pybind_py_library(
 )
 
 pybind_py_library(
-    name = "lcs_py",
+    name = "residual_learner_py",
     cc_deps = [
         "@drake//:drake_shared_library",
-        "//solvers:lcs",
+        "//systems/controllers:residual_learner",
     ],
-    cc_so_name = "lcs",
-    cc_srcs = ["lcs_py.cc"],
-    py_deps = [
-        "@drake//bindings/pydrake",
-        ":module_py",
-    ],
-    py_imports = ["."],
-)
-
-pybind_py_library(
-    name = "lcs_new_py",
-    cc_deps = [
-        "@drake//:drake_shared_library",
-        "//solvers:lcs",
-    ],
-    cc_so_name = "lcs_new",
-    cc_srcs = ["lcs_new_py.cc"],
-    py_deps = [
-        "@drake//bindings/pydrake",
-        ":module_py",
-    ],
-    py_imports = ["."],
-)
-
-pybind_py_library(
-    name = "lcs_factory_franka_new_py",
-    cc_deps = [
-        "@drake//:drake_shared_library",
-        "//solvers:lcs",
-    ],
-    cc_so_name = "lcs_factory_franka_new",
-    cc_srcs = ["lcs_factory_franka_new_py.cc"],
+    cc_so_name = "residual_learner",
+    cc_srcs = ["residual_learner_py.cc",
+                "//solvers:lcs"],
     py_deps = [
         "@drake//bindings/pydrake",
         ":module_py",
@@ -172,9 +143,7 @@ PY_LIBRARIES = [
     ":controllers_py",
     ":controllers_franka_py",
     ":impedance_controllers_py",
-    ":lcs_py",
-    ":lcs_new_py",
-    ":lcs_factory_franka_new_py",
+    ":residual_learner_py"
 ]
 
 # Package roll-up (for Bazel dependencies).

@@ -90,11 +90,15 @@ group "7.[SIM] C3" {
         exec = "bazel-bin/examples/franka_trajectory_following/visualizer --channel=FRANKA_OUTPUT";
         host = "localhost";
     }
-    cmd "f.[SIM] adaptive module" {
+    cmd "f.[SIM] data generator" {
+            exec = "bazel-bin/examples/franka_trajectory_following/lcm_data_generator --TTL 0";
+            host = "localhost";
+    }
+    cmd "g.[SIM] adaptive module" {
         exec = "bazel-bin/examples/franka_trajectory_following/lcm_adaptive_test --TTL 0";
         host = "localhost";
     }
-    cmd "g.[TESTING] position control" {
+    cmd "h.[TESTING] position control" {
         exec = "bazel-bin/examples/franka_trajectory_following/run_c3_position_experiment";
         host = "localhost";
     }

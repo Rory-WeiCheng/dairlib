@@ -10,13 +10,10 @@
 #include <drake/lcm/drake_lcm.h>
 #include <drake/multibody/tree/multibody_element.h>
 #include <drake/multibody/parsing/parser.h>
-#include "drake/math/autodiff.h"
-
 
 #include "systems/robot_lcm_systems.h"
 #include "dairlib/lcmt_robot_input.hpp"
 #include "dairlib/lcmt_robot_output.hpp"
-#include "dairlib/lcmt_c3.hpp"
 #include "dairlib/lcmt_lcs.hpp"
 #include "systems/system_utils.h"
 
@@ -24,7 +21,7 @@
 #include "systems/controllers/residual_learner.h"
 #include "systems/framework/lcm_driven_loop.h"
 
-// add scv reading utils for reading the learnt lcs matrices and make lcs
+// add csv reading utils for reading the learnt lcs matrices and make lcs
 // just a rough way to incooperate learning part for sanity check
 #include "common/file_utils.h"
 #include "solvers/lcs.h"
@@ -52,8 +49,6 @@ using solvers::LCS;
 
 int DoMain(int argc, char* argv[]){
   gflags::ParseCommandLineFlags(&argc, &argv, true);
-  C3Parameters param = drake::yaml::LoadYamlFile<C3Parameters>(
-    "examples/franka_trajectory_following/parameters.yaml");
   drake::lcm::DrakeLcm drake_lcm;
   drake::lcm::DrakeLcm drake_lcm_network("udpm://239.255.76.67:7667?ttl=1");
 
@@ -65,7 +60,7 @@ int DoMain(int argc, char* argv[]){
   auto [plant_franka, scene_graph_franka] = AddMultibodyPlantSceneGraph(&builder_franka, sim_dt);
   Parser parser_franka(&plant_franka);
   parser_franka.AddModelFromFile("examples/franka_trajectory_following/robot_properties_fingers/urdf/franka_box.urdf");
-  parser_franka.AddModelFromFile("examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere_model.urdf");
+  parser_franka.AddModelFromFile("examples/franka_trajectory_following/robot_properties_fingers/urdf/sphere.urdf");
   RigidTransform<double> X_WI_franka = RigidTransform<double>::Identity();
   plant_franka.WeldFrames(plant_franka.world_frame(), plant_franka.GetFrameByName("panda_link0"), X_WI_franka);
   plant_franka.Finalize();
@@ -76,7 +71,7 @@ int DoMain(int argc, char* argv[]){
   auto lcs_sender = builder.AddSystem<systems::RobotLCSSender>();
 
   builder.Connect(state_receiver->get_output_port(0), learner->get_input_port(0));
-  builder.Connect(learner->get_output_port(), lcs_sender->get_input_port(0));
+  builder.Connect(learner->get_output_port(0), lcs_sender->get_input_port(0));
 
   // determine if ttl 0 or 1 should be used for publishing
   drake::lcm::DrakeLcm* pub_lcm;
