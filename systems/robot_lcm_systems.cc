@@ -285,7 +285,6 @@ void RobotC3Receiver::CopyC3Out(const Context<double>& context,
   DRAKE_ASSERT(input != nullptr);
   const auto& input_msg = input->get_value<dairlib::lcmt_c3>();
   DRAKE_ASSERT(input_msg.data.size() == data_size_);
-  std::cout<< input_msg.data.size() << std::endl;
 
   VectorXd input_vector = VectorXd::Zero(data_size_);
   for (int i = 0; i < data_size_; i++) {

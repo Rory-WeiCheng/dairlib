@@ -48,7 +48,6 @@ using drake::systems::Context;
 using drake::multibody::Parser;
 using multibody::makeNameToPositionsMap;
 using multibody::makeNameToVelocitiesMap;
-using drake::trajectories::PiecewisePolynomial;
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
@@ -183,9 +182,36 @@ int DoMain(int argc, char* argv[]){
   auto diagram = builder.Build();
   // DrawAndSaveDiagramGraph(*diagram, "examples/franka_trajectory_following/diagram_lcm_control_demo");
   auto context_d = diagram->CreateDefaultContext();
-  // Run lcm-driven simulation
+  // c3_receiver context
+  auto& receiver_context = diagram->GetMutableSubsystemContext(*state_receiver, context_d.get());
+  (void) receiver_context; // suppressed unused variable warning
+
+  // Create the lcm-driven loop
   systems::LcmDrivenLoop<dairlib::lcmt_robot_output> loop(
       &drake_lcm, std::move(diagram), state_receiver, "FRANKA_STATE_ESTIMATE", true);
+
+ //------initialize message, needed to subscribe the c3 input message, or it would cause memeory leak ----//
+  std::vector<double> msg_data(41, 0);
+
+  dairlib::lcmt_c3 init_msg;
+  init_msg.data = msg_data;
+  init_msg.data_size = 41;
+  init_msg.utime = 0.0;
+
+  /// assign initial message
+  auto& diagram_context_loop = loop.get_diagram_mutable_context();
+  auto& ik_subscriber_context =
+      loop.get_diagram()->GetMutableSubsystemContext(*c3_subscriber,
+                                                     &diagram_context_loop);
+  // Note that currently the LcmSubscriber stores the lcm message in the first
+  // state of the leaf system (we hard coded index 0 here)
+  auto& mutable_state =
+      ik_subscriber_context
+          .get_mutable_abstract_state<dairlib::lcmt_c3>(0);
+  mutable_state = init_msg;
+  //--------------------------------- initialize message setting  ends ---------------------------------//
+
+  // run lcm-driven loop
   loop.Simulate(std::numeric_limits<double>::infinity());
   return 0;
 }

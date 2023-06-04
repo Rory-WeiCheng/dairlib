@@ -94,134 +94,114 @@ void Data_Generator::CalcData(const Context<double>& context,
   auto robot_output =
       (OutputVector<double>*) this->EvalVectorInput(context, franka_state_input_port_);
 
-  auto c3_output =
+  auto c3_msg =
       (TimestampedVector<double>*) this->EvalVectorInput(context, c3_state_input_port_);
-//  VectorXd c3_input = c3_stuff->get_data();
+  VectorXd c3_input = c3_msg->get_data();
 
   double timestamp = robot_output->get_timestamp();
-//
-//  if (!received_first_message_) {
-//    received_first_message_ = true;
-//    first_message_time_ = timestamp;
-//  }
-//
-//  double settling_time = param_.stabilize_time1 + param_.move_time + param_.stabilize_time2 + first_message_time_;
+
+  if (!received_first_message_) {
+    received_first_message_ = true;
+    first_message_time_ = timestamp;
+  }
+
+  double settling_time = param_.stabilize_time1 + param_.move_time + param_.stabilize_time2 + first_message_time_;
+//  std::cout<< settling_time << std::endl;
+  std::cout<< timestamp << std::endl;
 //  if (timestamp <= settling_time) {
 //    // hard code for now, improve in the future
-//    VectorXd state = VectorXd::Zero(19);
-//    VectorXd u = VectorXd::Zero(3);
-//    VectorXd state_next = VectorXd::Zero(19);
+//    VectorXd state = VectorXd::Ones(19);
+//    VectorXd u = VectorXd::Ones(3);
+//    VectorXd state_next = VectorXd::Ones(19);
 //
-//    MatrixXd A = MatrixXd::Zero(9, 19);
-//    MatrixXd B = MatrixXd::Zero(9, 3);
-//    MatrixXd D = MatrixXd::Zero(9, 12);
-//    VectorXd d = VectorXd::Zero(9);
+//    MatrixXd A = MatrixXd::Ones(9, 19);
+//    MatrixXd B = MatrixXd::Ones(9, 3);
+//    MatrixXd D = MatrixXd::Ones(9, 12);
+//    VectorXd d = VectorXd::Ones(9);
 //
-//    MatrixXd E = MatrixXd::Zero(12, 19);
-//    MatrixXd F = MatrixXd::Zero(12, 12);
-//    MatrixXd H = MatrixXd::Zero(12, 3);
-//    VectorXd c = VectorXd::Zero(12);
+//    MatrixXd E = MatrixXd::Ones(12, 19);
+//    MatrixXd F = MatrixXd::Ones(12, 12);
+//    MatrixXd H = MatrixXd::Ones(12, 3);
+//    VectorXd c = VectorXd::Ones(12);
 //
 //    LCS LCS_model(A, B, D, d, E, F, H, c, 1);
 //
 //    LearningData data(state, u, state_next, LCS_model, timestamp);
 //    *data_pack = data;
 //    prev_timestamp_ = timestamp;
-////    std::cout<< 'ok'<<std::endl;
 //    return;
 //  }
-//
-//  /// FK
-//  // update context once for FK
-//  plant_franka_.SetPositions(&context_franka_, robot_output->GetPositions());
-//  plant_franka_.SetVelocities(&context_franka_, robot_output->GetVelocities());
-//  Vector3d EE_offset_ = param_.EE_offset;
-//  const drake::math::RigidTransform<double> H_mat =
-//      plant_franka_.EvalBodyPoseInWorld(
-//          context_franka_, plant_franka_.GetBodyByName("panda_link10"));
-//  const RotationMatrix<double> R_current = H_mat.rotation();
-//  Vector3d end_effector = H_mat.translation() + R_current * EE_offset_;
-//
-//  // jacobian and end_effector_dot
-//  auto EE_frame_ = &plant_franka_.GetBodyByName("panda_link10").body_frame();
-//  auto world_frame_ = &plant_franka_.world_frame();
-//  MatrixXd J_fb(6, plant_franka_.num_velocities());
-//  plant_franka_.CalcJacobianSpatialVelocity(
-//      context_franka_, JacobianWrtVariable::kV, *EE_frame_, EE_offset_,
-//      *world_frame_, *world_frame_, &J_fb);
-//  MatrixXd J_franka = J_fb.block(0, 0, 6, 7);
-//  VectorXd end_effector_dot =
-//      (J_franka * (robot_output->GetVelocities()).head(7)).tail(3);
-//
-//  VectorXd q_plant = robot_output->GetPositions();
-//  VectorXd v_plant = robot_output->GetVelocities();
-//
-//  // parse franka state info
-//  VectorXd ball = q_plant.tail(7);
-//  Vector3d ball_xyz = ball.tail(3);
-//  VectorXd ball_dot = v_plant.tail(6);
-//  Vector3d v_ball = ball_dot.tail(3);
-//
-//  VectorXd q(10);
-//  q << end_effector, ball;
-//  VectorXd v(9);
-//  v << end_effector_dot, ball_dot;
-//  VectorXd u = c3_input.tail(3);
-//
-//  VectorXd state(plant_.num_positions() + plant_.num_velocities());
-//  state << end_effector, q_plant.tail(7), end_effector_dot, v_plant.tail(6);
-//
-//  /// update autodiff
-//  VectorXd xu(plant_f_.num_positions() + plant_f_.num_velocities() +
-//              plant_f_.num_actuators());
-//  xu << q, v, u;
-//  auto xu_ad = drake::math::InitializeAutoDiff(xu);
-//
-//  plant_ad_f_.SetPositionsAndVelocities(
-//      &context_ad_f_,
-//      xu_ad.head(plant_f_.num_positions() + plant_f_.num_velocities()));
-//  multibody::SetInputsIfNew<AutoDiffXd>(
-//      plant_ad_f_, xu_ad.tail(plant_f_.num_actuators()), &context_ad_f_);
-//
-//  /// upddate context
-//  plant_f_.SetPositions(&context_f_, q);
-//  plant_f_.SetVelocities(&context_f_, v);
-//  multibody::SetInputsIfNew<double>(plant_f_, u, &context_f_);
-//
-//  double dt = timestamp - prev_timestamp_;
-//
-//  /// use the LCSFactoryFrankaRef which does not fix with residual lcs and scaling
-//  auto system_scaling_pair =solvers::LCSFactoryFrankaRef::LinearizePlantToLCS(
-//      plant_f_, context_f_, plant_ad_f_, context_ad_f_,
-//      contact_geoms_, num_friction_directions_, mu_, dt);
-//
-//  LCS LCS_model = system_scaling_pair.first;
-//  VectorXd state_next = LCS_model.Simulate(state, u);
-//
-//  LearningData data(state, u, state_next, LCS_model, timestamp);
-//  *data_pack = data;
-//  prev_timestamp_ = timestamp;
-//  std::cout<< 'ok'<<std::endl;
 
-  VectorXd state = VectorXd::Zero(19);
-  VectorXd u = VectorXd::Zero(3);
-  VectorXd state_next = VectorXd::Zero(19);
+  /// FK
+  // update context once for FK
+  plant_franka_.SetPositions(&context_franka_, robot_output->GetPositions());
+  plant_franka_.SetVelocities(&context_franka_, robot_output->GetVelocities());
+  Vector3d EE_offset_ = param_.EE_offset;
+  const drake::math::RigidTransform<double> H_mat =
+      plant_franka_.EvalBodyPoseInWorld(
+          context_franka_, plant_franka_.GetBodyByName("panda_link10"));
+  const RotationMatrix<double> R_current = H_mat.rotation();
+  Vector3d end_effector = H_mat.translation() + R_current * EE_offset_;
 
-  MatrixXd A = MatrixXd::Zero(9, 19);
-  MatrixXd B = MatrixXd::Zero(9, 3);
-  MatrixXd D = MatrixXd::Zero(9, 12);
-  VectorXd d = VectorXd::Zero(9);
+  // jacobian and end_effector_dot
+  auto EE_frame_ = &plant_franka_.GetBodyByName("panda_link10").body_frame();
+  auto world_frame_ = &plant_franka_.world_frame();
+  MatrixXd J_fb(6, plant_franka_.num_velocities());
+  plant_franka_.CalcJacobianSpatialVelocity(
+      context_franka_, JacobianWrtVariable::kV, *EE_frame_, EE_offset_,
+      *world_frame_, *world_frame_, &J_fb);
+  MatrixXd J_franka = J_fb.block(0, 0, 6, 7);
+  VectorXd end_effector_dot =
+      (J_franka * (robot_output->GetVelocities()).head(7)).tail(3);
 
-  MatrixXd E = MatrixXd::Zero(12, 19);
-  MatrixXd F = MatrixXd::Zero(12, 12);
-  MatrixXd H = MatrixXd::Zero(12, 3);
-  VectorXd c = VectorXd::Zero(12);
+  VectorXd q_plant = robot_output->GetPositions();
+  VectorXd v_plant = robot_output->GetVelocities();
 
-  LCS LCS_model(A, B, D, d, E, F, H, c, 1);
-  double timestamp_test = 1;
+  // parse franka state info
+  VectorXd ball = q_plant.tail(7);
+  Vector3d ball_xyz = ball.tail(3);
+  VectorXd ball_dot = v_plant.tail(6);
+  Vector3d v_ball = ball_dot.tail(3);
 
-  LearningData data(state, u, state_next, LCS_model, timestamp_test);
+  VectorXd q(10);
+  q << end_effector, ball;
+  VectorXd v(9);
+  v << end_effector_dot, ball_dot;
+  VectorXd u = c3_input.tail(3);
+
+  VectorXd state(plant_.num_positions() + plant_.num_velocities());
+  state << end_effector, q_plant.tail(7), end_effector_dot, v_plant.tail(6);
+
+  /// update autodiff
+  VectorXd xu(plant_f_.num_positions() + plant_f_.num_velocities() +
+              plant_f_.num_actuators());
+  xu << q, v, u;
+  auto xu_ad = drake::math::InitializeAutoDiff(xu);
+
+  plant_ad_f_.SetPositionsAndVelocities(
+      &context_ad_f_,
+      xu_ad.head(plant_f_.num_positions() + plant_f_.num_velocities()));
+  multibody::SetInputsIfNew<AutoDiffXd>(
+      plant_ad_f_, xu_ad.tail(plant_f_.num_actuators()), &context_ad_f_);
+
+  /// upddate context
+  plant_f_.SetPositions(&context_f_, q);
+  plant_f_.SetVelocities(&context_f_, v);
+  multibody::SetInputsIfNew<double>(plant_f_, u, &context_f_);
+
+  double dt = timestamp - prev_timestamp_;
+
+  /// use the LCSFactoryFrankaRef which does not fix with residual lcs and scaling
+  auto system_scaling_pair =solvers::LCSFactoryFrankaRef::LinearizePlantToLCS(
+      plant_f_, context_f_, plant_ad_f_, context_ad_f_,
+      contact_geoms_, num_friction_directions_, mu_, dt);
+
+  LCS LCS_model = system_scaling_pair.first;
+  VectorXd state_next = LCS_model.Simulate(state, u);
+
+  LearningData data(state, u, state_next, LCS_model, timestamp);
   *data_pack = data;
+  prev_timestamp_ = timestamp;
 }
 } // controllers
 } // systems
