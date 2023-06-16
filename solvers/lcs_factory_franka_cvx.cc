@@ -1,4 +1,4 @@
-#include "solvers/lcs_factory_franka_ref.h"
+#include "solvers/lcs_factory_franka.h"
 
 #include "multibody/geom_geom_collider.h"
 #include "multibody/kinematic/kinematic_evaluator_set.h"
@@ -26,24 +26,17 @@ using drake::systems::Context;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-std::pair <LCS, double> LCSFactoryFrankaRef::LinearizePlantToLCS(
+std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
     const MultibodyPlant<double>& plant, const Context<double>& context,
     const MultibodyPlant<AutoDiffXd>& plant_ad,
     const Context<AutoDiffXd>& context_ad,
-    std::vector<drake::geometry::GeometryId> contact_geoms_orig,
-    int num_friction_directions, double mu, float dt) {
+    const vector<SortedPair<GeometryId>>& contact_geoms,
+    int num_friction_directions, double mu, float dt, LCS Res) {
 
 
-
-  /// This new lcs factory take in not-sorted contact_geoms (named contact_geoms_orig) and do sorted pair operations in
-  /// the function, also, only returns the velocity part of the dynamics and do not do any of the scalings on the dynamics
-  /// and the LCP
-  /// only works for c3 ball-rolling data-collection
-  std::vector<SortedPair<GeometryId>> contact_geoms;
-  contact_geoms.push_back(SortedPair(contact_geoms_orig[0], contact_geoms_orig[1]));  //was 0, 3
-  contact_geoms.push_back(SortedPair(contact_geoms_orig[1], contact_geoms_orig[2]));
-
+  ///
   /// First, calculate vdot and derivatives from non-contact dynamics
+  ///
 
   AutoDiffVecXd C(plant.num_velocities());
 
@@ -76,7 +69,7 @@ std::pair <LCS, double> LCSFactoryFrankaRef::LinearizePlantToLCS(
 
   VectorXd d_v = d_vv - x_dvvcomp;
 
-  /// num_state is actually num_position though state is position + velocity
+
   int n_state = plant_ad.num_positions();
   int n_vel = plant_ad.num_velocities();
   int n_total = plant_ad.num_positions() + plant_ad.num_velocities();
@@ -250,36 +243,68 @@ std::pair <LCS, double> LCSFactoryFrankaRef::LinearizePlantToLCS(
             2 * contact_geoms.size() * num_friction_directions) =
       J_t * dt * d_v;
 
-//  for data collecting, we don't want to scale the complementarity part
-//  auto Dn = D.squaredNorm();
-//  auto An = A.squaredNorm();
-//  auto AnDn = An / Dn;
-  double AnDn = 1.0;
 
-  MatrixXd Av = A.block(n_state, 0, n_vel, n_state + n_vel);
-  MatrixXd Bv = B.block(n_state, 0, n_vel, n_input);
-  MatrixXd Dv = D.block(n_state, 0, n_vel, n_contact);
-  VectorXd dv = d.tail(n_vel);
+//  add the residual part matrices here
+//  MatrixXd Res_A = Res.A_[0];
+  MatrixXd Res_Av = Res.A_[0];
+//  MatrixXd Res_B = Res.B_[0];
+  MatrixXd Res_Bv = Res.B_[0];
+//  MatrixXd Res_D = Res.D_[0];
+  MatrixXd Res_Dv = Res.D_[0];
+//  VectorXd Res_d = Res.d_[0];
+  VectorXd Res_dv = Res.d_[0];
+  MatrixXd Res_E = Res.E_[0];
+  MatrixXd Res_F = Res.F_[0];
+  MatrixXd Res_H = Res.H_[0];
+  VectorXd Res_c = Res.c_[0];
 
-  /// horizon = 1, because we only want the LCS linearized at current time
-  int N = 1;
+////  Assemble the position and learnt velocity part (for dynamics)
+  MatrixXd Res_A(n_total, n_total);
+  MatrixXd Res_B(n_total, n_input);
+  MatrixXd Res_D(n_total, n_contact);
+  VectorXd Res_d(n_total);
 
-  std::vector<MatrixXd> A_lcs(N, Av);
-  std::vector<MatrixXd> B_lcs(N, Bv);
-  std::vector<MatrixXd> D_lcs(N, Dv);
-//  std::vector<MatrixXd> D_lcs(N, D * AnDn);
-  std::vector<VectorXd> d_lcs(N, dv);
-  std::vector<MatrixXd> E_lcs(N, E);
-//  std::vector<MatrixXd> E_lcs(N, E / AnDn);
+  Res_A.block(0, 0, n_state, n_total) = dt * Nq * Res_Av;
+  Res_A.block(n_state, 0, n_vel, n_total) = Res_Av;
+  Res_B.block(0, 0, n_state, n_input) = dt * Nq * Res_Bv;
+  Res_B.block(n_state, 0, n_vel, n_input) = dt * Nq * Res_Bv;
+  Res_D.block(0, 0, n_state, n_contact) = dt * Nq * Res_Dv;
+  Res_D.block(n_state, 0, n_vel, n_contact) = Res_Dv;
+  Res_d.head(n_state) = dt * Nq * Res_dv;
+  Res_d.tail(n_vel) = Res_dv;
+
+//  state-dependent formulations
+  A = A + Res_A;
+  B = B + Res_B;
+  D = D + Res_D;
+  d = d + Res_d;
+  E = E + Res_E;
+  F = F + Res_F;
+  H = H + Res_H;
+  c = c + Res_c;
+
+
+
+
+  int N = 5;
+
+  auto Dn = D.squaredNorm();
+  auto An = A.squaredNorm();
+  auto AnDn = An / Dn;
+
+  std::vector<MatrixXd> A_lcs(N, A);
+  std::vector<MatrixXd> B_lcs(N, B);
+  std::vector<MatrixXd> D_lcs(N, D * AnDn);
+  std::vector<VectorXd> d_lcs(N, d );
+  std::vector<MatrixXd> E_lcs(N, E / AnDn);
   std::vector<MatrixXd> F_lcs(N, F);
-  std::vector<VectorXd> c_lcs(N, c);
-//  std::vector<VectorXd> c_lcs(N, c / AnDn);
-  std::vector<MatrixXd> H_lcs(N, H);
-//  std::vector<MatrixXd> H_lcs(N, H / AnDn);
+  std::vector<VectorXd> c_lcs(N, c / AnDn);
+  std::vector<MatrixXd> H_lcs(N, H / AnDn);
 
   LCS system(A_lcs, B_lcs, D_lcs, d_lcs, E_lcs, F_lcs, H_lcs, c_lcs);
 
   std::pair <LCS, double> ret (system, AnDn);
+
   return ret;
 
 }

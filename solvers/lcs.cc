@@ -126,6 +126,9 @@ void LCS::CopyLCSToLcm(lcmt_lcs *lcs_msg) const {
   lcs_msg->num_control = B_[0].cols();
   lcs_msg->num_lambda = D_[0].cols();
 
+  lcs_msg->A.clear();
+  lcs_msg->B.clear();
+  lcs_msg->D.clear();
   for (int i = 0; i < A_[0].rows(); i++) {
       lcs_msg->A.push_back(
           CopyVectorXdToStdVector(A_[0].block(i, 0, 1, A_[0].cols()).transpose())
@@ -139,6 +142,9 @@ void LCS::CopyLCSToLcm(lcmt_lcs *lcs_msg) const {
     }
   lcs_msg->d = CopyVectorXdToStdVector(d_[0]);
 
+  lcs_msg->E.clear();
+  lcs_msg->F.clear();
+  lcs_msg->H.clear();
   for (int i = 0; i < E_[0].rows(); i++) {
       lcs_msg->E.push_back(
           CopyVectorXdToStdVector(E_[0].block(i, 0, 1, E_[0].cols()).transpose())

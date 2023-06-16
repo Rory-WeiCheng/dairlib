@@ -23,7 +23,8 @@ class LearningData {
       const Eigen::VectorXd& input,
       const Eigen::VectorXd& state_pred,
       const LCS& LCS_model,
-      const double& timestamp);
+      const double& timestamp,
+      const double& settling_time);
 
   void CopyLearningDataToLcm(lcmt_learning_data* msg) const;
 
@@ -33,6 +34,7 @@ class LearningData {
   Eigen::VectorXd state_pred_;
   LCS LCS_model_;
   double timestamp_;
+  double settling_time_; // helper data to filter out the initial phase
 };
 
 }  // namespace solvers

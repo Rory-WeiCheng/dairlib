@@ -54,6 +54,7 @@ cc_library(
         "lcs_factory_franka.cc",
         "lcs_factory_franka_new.cc",
         "lcs_factory_franka_ref.cc",
+        "lcs_factory_franka_cvx.cc",
     ],
     hdrs = [
         "lcs.h",
@@ -62,6 +63,7 @@ cc_library(
         "lcs_factory_franka.h",
         "lcs_factory_franka_new.h",
         "lcs_factory_franka_ref.h",
+        "lcs_factory_franka_cvx.h",
     ],
     deps = [
         "//multibody/kinematic",

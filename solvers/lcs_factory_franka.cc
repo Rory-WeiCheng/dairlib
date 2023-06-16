@@ -1,4 +1,4 @@
-#include "solvers/lcs_factory_franka.h"
+#include "solvers/lcs_factory_franka_cvx.h"
 
 #include "multibody/geom_geom_collider.h"
 #include "multibody/kinematic/kinematic_evaluator_set.h"
@@ -26,7 +26,7 @@ using drake::systems::Context;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
+std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
     const MultibodyPlant<double>& plant, const Context<double>& context,
     const MultibodyPlant<AutoDiffXd>& plant_ad,
     const Context<AutoDiffXd>& context_ad,
@@ -243,6 +243,7 @@ std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
             2 * contact_geoms.size() * num_friction_directions) =
       J_t * dt * d_v;
 
+
 //  add the residual part matrices here
 //  MatrixXd Res_A = Res.A_[0];
   MatrixXd Res_Av = Res.A_[0];
@@ -281,9 +282,6 @@ std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
   F = F + Res_F;
   H = H + Res_H;
   c = c + Res_c;
-
-//  std::cout<<"Res_c:"<<std::endl;
-//  std::cout<<Res_c<<std::endl;
 
 
 

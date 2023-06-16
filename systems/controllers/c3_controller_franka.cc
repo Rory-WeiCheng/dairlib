@@ -403,9 +403,10 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
       num_friction_directions_, mu_, 0.1, residual_lcs);
 
+
   solvers::LCS system_ = system_scaling_pair.first;
   // double scaling = system_scaling_pair.second;
-
+  
   C3Options options;
   int N = (system_.A_).size();
   int n = ((system_.A_)[0].cols());
@@ -502,13 +503,13 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
     state_next(10) = clamped_velocity(0);
     state_next(11) = clamped_velocity(1);
     state_next(12) = clamped_velocity(2);
-
 //    std::cout << "velocity limit(c3)" << std::endl;
 
     /// update the user
     // std::cout << "The desired EE velocity was " << vd.norm() << "m/s. ";
     // std::cout << "Clamping the desired EE velocity to " << max_desired_velocity_ << "m/s." << std::endl;
   }
+
 
   VectorXd force_des = VectorXd::Zero(6);
   force_des << force(0), force(2), force(4), force(5), force(6), force(7);

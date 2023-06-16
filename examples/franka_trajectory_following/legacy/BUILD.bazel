@@ -61,6 +61,17 @@ py_binary(
 )
 
 py_binary(
+    name = "call_adaptive",
+    srcs = ["call_adaptive.py"],
+    deps = [
+        "//bindings/pydairlib",
+        "@drake//bindings/pydrake",
+    ],
+    data = [":trifinger_urdf",
+            "@drake//manipulation/models/franka_description:models"],
+)
+
+py_binary(
     name = "residual_learner",
     srcs = ["residual_learner.py"],
     deps = [

@@ -12,8 +12,10 @@ LearningData::LearningData(const Eigen::VectorXd& state,
          const Eigen::VectorXd& input,
          const Eigen::VectorXd& state_pred,
          const LCS& LCS_model,
-         const double& timestamp)
-    : state_(state), input_(input), state_pred_(state_pred), LCS_model_(LCS_model), timestamp_(timestamp) {}
+         const double& timestamp,
+         const double& settling_time)
+    : state_(state), input_(input), state_pred_(state_pred), LCS_model_(LCS_model),
+      timestamp_(timestamp), settling_time_(settling_time) {}
 
 /// methods to move the LearningData type back and forth from LCM, used for RobotLearningDataSender
 /// CopyLCSToLcm: used in the LCS sender, grab the matrices out from LCS class and send them to lcm type
@@ -23,6 +25,9 @@ void LearningData::CopyLearningDataToLcm(lcmt_learning_data *msg) const {
   msg->num_control = LCS_model_.B_[0].cols();
   msg->num_lambda = LCS_model_.D_[0].cols();
 
+  msg->A.clear();
+  msg->B.clear();
+  msg->D.clear();
   for (int i = 0; i < LCS_model_.A_[0].rows(); i++) {
       msg->A.push_back(
           CopyVectorXdToStdVector(LCS_model_.A_[0].block(i, 0, 1, LCS_model_.A_[0].cols()).transpose())
@@ -36,6 +41,9 @@ void LearningData::CopyLearningDataToLcm(lcmt_learning_data *msg) const {
     }
   msg->d = CopyVectorXdToStdVector(LCS_model_.d_[0]);
 
+  msg->E.clear();
+  msg->F.clear();
+  msg->H.clear();
   for (int i = 0; i < LCS_model_.E_[0].rows(); i++) {
       msg->E.push_back(
           CopyVectorXdToStdVector(LCS_model_.E_[0].block(i, 0, 1, LCS_model_.E_[0].cols()).transpose())
@@ -53,6 +61,7 @@ void LearningData::CopyLearningDataToLcm(lcmt_learning_data *msg) const {
   msg->input = CopyVectorXdToStdVector(input_);
   msg->state_pred = CopyVectorXdToStdVector(state_pred_);
   msg->utime = timestamp_ * 1e6;
+  msg->settling_time = settling_time_;
 }
 
 }  // namespace solvers

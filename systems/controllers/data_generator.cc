@@ -103,11 +103,12 @@ void Data_Generator::CalcData(const Context<double>& context,
   if (!received_first_message_) {
     received_first_message_ = true;
     first_message_time_ = timestamp;
+    double settling_time = 0;
   }
 
   double settling_time = param_.stabilize_time1 + param_.move_time + param_.stabilize_time2 + first_message_time_;
 //  std::cout<< settling_time << std::endl;
-  std::cout<< timestamp << std::endl;
+//  std::cout<< timestamp << std::endl;
 //  if (timestamp <= settling_time) {
 //    // hard code for now, improve in the future
 //    VectorXd state = VectorXd::Ones(19);
@@ -159,9 +160,7 @@ void Data_Generator::CalcData(const Context<double>& context,
 
   // parse franka state info
   VectorXd ball = q_plant.tail(7);
-  Vector3d ball_xyz = ball.tail(3);
   VectorXd ball_dot = v_plant.tail(6);
-  Vector3d v_ball = ball_dot.tail(3);
 
   VectorXd q(10);
   q << end_effector, ball;
@@ -194,12 +193,24 @@ void Data_Generator::CalcData(const Context<double>& context,
   /// use the LCSFactoryFrankaRef which does not fix with residual lcs and scaling
   auto system_scaling_pair =solvers::LCSFactoryFrankaRef::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_,
-      contact_geoms_, num_friction_directions_, mu_, dt);
+      contact_geoms_, num_friction_directions_, mu_, 0.005);
 
   LCS LCS_model = system_scaling_pair.first;
-  VectorXd state_next = LCS_model.Simulate(state, u);
+  VectorXd state_pred = system_scaling_pair.first.A_[0] * state
+                        + system_scaling_pair.first.B_[0] * u + system_scaling_pair.first.d_[0];
+//  VectorXd state_pred = system_scaling_pair.first.d_[0];
+//  std::cout<< dt << std::endl;
+//  VectorXd state_pred = system_scaling_pair.first.A_[0] * state
+//                          + system_scaling_pair.first.B_[0] * u;
+//  VectorXd state_pred = system_scaling_pair.first.Simulate(state,u);
+//  VectorXd state_pred = system_scaling_pair.first.Simulate(state,u) - system_scaling_pair.first.A_[0] * state
+//                        - system_scaling_pair.first.B_[0] * u - system_scaling_pair.first.d_[0];
+//  VectorXd state_pred = system_scaling_pair.first.Simulate(state,u) - system_scaling_pair.first.A_[0] * state
+//                        - system_scaling_pair.first.B_[0] * u;
 
-  LearningData data(state, u, state_next, LCS_model, timestamp);
+
+
+  LearningData data(state, u, state_pred, LCS_model, timestamp, settling_time);
   *data_pack = data;
   prev_timestamp_ = timestamp;
 }
