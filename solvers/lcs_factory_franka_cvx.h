@@ -13,8 +13,14 @@ class LCSFactoryFrankaConvex {
   /// for AutoDiff. Given that Contexts can be expensive to create, this is
   /// preferred to extracting the double-version from the AutoDiff.
   ///
+  /// Rather than using Stwart Trinkle Model, this LCS factory uses Anitescu's
+  /// Convex Relaxation Model to create a convex a time-invariant LCS
+
   /// TODO: add variant allowing for different frictional properties per
   ///       contact
+  /// TODO: add a flag to determine whether to use scaling or not
+  /// TODO: add a flag(?) to determine whether to return the full dynamics
+  ///       or only the velocity part
   ///
   /// @param plant The standard <double> MultibodyPlant
   /// @param context The context about which to linearize (double)
