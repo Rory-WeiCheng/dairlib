@@ -267,7 +267,7 @@ std::pair<LCS,double> LCSFactoryFranka::LinearizePlantToLCS(
   Res_A.block(0, 0, n_state, n_total) = dt * Nq * Res_Av;
   Res_A.block(n_state, 0, n_vel, n_total) = Res_Av;
   Res_B.block(0, 0, n_state, n_input) = dt * Nq * Res_Bv;
-  Res_B.block(n_state, 0, n_vel, n_input) = dt * Nq * Res_Bv;
+  Res_B.block(n_state, 0, n_vel, n_input) = Res_Bv;
   Res_D.block(0, 0, n_state, n_contact) = dt * Nq * Res_Dv;
   Res_D.block(n_state, 0, n_vel, n_contact) = Res_Dv;
   Res_d.head(n_state) = dt * Nq * Res_dv;

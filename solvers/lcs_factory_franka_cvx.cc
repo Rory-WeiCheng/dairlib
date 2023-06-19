@@ -43,7 +43,7 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   int n_input = plant_ad.num_actuators();
 
   // ------------------------------------------------------------------------ //
-  /// First, calculate vdot from non-contact dynamics
+  /// First, calculate vdot from non-contact dynamics using AutoDiff Plant
   /// manipulator equation: M * vdot + C + G = Bu + J.T * F_ext (no J_c.T * F_contact)
   /// in Drake's notation convention: M * vdot + C = tau_g + tau_app
 
@@ -56,7 +56,7 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   // tau_g = -G, see the above comments on drake notation
   AutoDiffVecXd tau_g = plant_ad.CalcGravityGeneralizedForces(context_ad);
 
-  // f_app is a drake MultibodyForces object, not a actual sptial or generalized force
+  // f_app is a drake MultibodyForces object, not an actual sptial or generalized force
   // f_app.generalized_forces() = tau_app, tau_app = J.T * F_ext
   drake::multibody::MultibodyForces<AutoDiffXd> f_app(plant_ad);
   plant_ad.CalcForceElementsContribution(context_ad, &f_app);
@@ -102,12 +102,14 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   /// Now, calculate the contact related terms, J_n and J_t means the contact
   /// Jacobians in normal and tangential directions, respectively
   /// Note that in Anitescu's convex formulation, the contact Jacobian is not
-  /// decoupled in two directions, but use a combination of the two J_c = E
+  /// decoupled in tangential and normal, but use a combination of the two
+  /// i.e. J_c = E.T * J_n + mu * J_t
 
   VectorXd phi(contact_geoms.size());
   MatrixXd J_n(contact_geoms.size(), n_vel);
   MatrixXd J_t(2 * contact_geoms.size() * num_friction_directions, n_vel);
 
+  // from GeomGeomCollider (collision dectection) get contact informations
   for (int i = 0; i < contact_geoms.size(); i++) {
     multibody::GeomGeomCollider collider(
         plant, contact_geoms[i]);  // deleted num_fricton_directions (check with
@@ -130,6 +132,7 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
         MatrixXd::Ones(1, 2 * num_friction_directions);
   };
 
+  // Contact Jacobian for Anitescu Model
   MatrixXd J_c = E_t.transpose() * J_n + mu * J_t;
 
   // Also calculate M^(-1)J_c.T that would be used in the future
@@ -149,7 +152,7 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
 
   /// Matrix format
   /// [ q_{k+1}; v_{k+1}] = [ I + dt * dt * Nq * AB_v_q,  dt * Nq +  dt * dt * Nq * AB_v_v ] [q_k;v_k] +   [ dt * dt * Nq * AB_v_u ] [u_k] + [ dt * Nq * Minv * J_c.T ] [lam] + [ dt * dt * Nq * dv ]
-  ///                       [ dt * AB_v_q              ,  I + dt * AB_v_v                  ]           +   [ dt * AB_v_u           ]       + [ Minv * J_c.T * lam     ]       + [ dt * d_v          ]
+  ///                       [ dt * AB_v_q              ,  I + dt * AB_v_v                  ]           +   [ dt * AB_v_u           ]       + [ Minv * J_c.T           ]       + [ dt * d_v          ]
 
   MatrixXd A(n_total, n_total);
   MatrixXd B(n_total, n_input);
@@ -165,7 +168,7 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   A.block(0, n_pos, n_pos, n_vel) = dt * Nq + dt * dt * Nq * AB_v_v;
   A.block(n_pos, 0, n_vel, n_pos) = dt * AB_v_q;
   A.block(n_pos, n_pos, n_vel, n_vel) =
-      dt * AB_v_v + MatrixXd::Identity(n_vel, n_vel);
+       MatrixXd::Identity(n_vel, n_vel) + dt * AB_v_v;
 
   B.block(0, 0, n_pos, n_input) = dt * dt * Nq * AB_v_u;
   B.block(n_pos, 0, n_vel, n_input) = dt * AB_v_u;
@@ -179,7 +182,8 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
 
 
   /// Complementarity equations
-  /// [ 0 ] <= [ lambda ] (PERP) [E_t.T * phi / dt + J_c * v_{k+1}] >= 0
+  /// [ 0 ] <= [ lambda ] (PERP) [ E_t.T * phi / dt + J_c * v_{k+1} ] >= 0
+  /// [ 0 ] <= [ lambda ] (PERP) [ E_t.T * phi / dt + J_c * ([ v_k ] + [ dt * AB_v * [q_k; v_k; u_k] ] + [Minv * J_c.T * lam] + [ dt * d_v ]) ]
 
   /// Matrix format
   ///  [ 0 ] <= [lambda] (PERP) [ dt * J_c * AB_v_q,  J_c + dt * J_c * AB_v_v ] [q_k; v_k] + [ dt *  J_c * AB_v_u ] * [u_k] + [ J_c * Minv * J_c.T] * [lam_k] + [E_t.T * phi / dt + dt * J_c * d_v ] >= 0
@@ -197,16 +201,13 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   H = dt * J_c * AB_v_u;
 
   c = E_t.transpose() * phi / dt + dt * J_c * d_v;
+
   // ------------------------------------------------------------------------ //
   /// Finally, consider residual lcs input and return the final lcs
   // add the residual part matrices, use the only learning velocity formulation
-  // MatrixXd Res_A = Res.A_[0];
   MatrixXd Res_Av = Res.A_[0];
-  // MatrixXd Res_B = Res.B_[0];
   MatrixXd Res_Bv = Res.B_[0];
-  // MatrixXd Res_D = Res.D_[0];
   MatrixXd Res_Dv = Res.D_[0];
-  // VectorXd Res_d = Res.d_[0];
   VectorXd Res_dv = Res.d_[0];
   MatrixXd Res_E = Res.E_[0];
   MatrixXd Res_F = Res.F_[0];
@@ -222,7 +223,7 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   Res_A.block(0, 0, n_pos, n_total) = dt * Nq * Res_Av;
   Res_A.block(n_pos, 0, n_vel, n_total) = Res_Av;
   Res_B.block(0, 0, n_pos, n_input) = dt * Nq * Res_Bv;
-  Res_B.block(n_pos, 0, n_vel, n_input) = dt * Nq * Res_Bv;
+  Res_B.block(n_pos, 0, n_vel, n_input) = Res_Bv;
   Res_D.block(0, 0, n_pos, n_contact) = dt * Nq * Res_Dv;
   Res_D.block(n_pos, 0, n_vel, n_contact) = Res_Dv;
   Res_d.head(n_pos) = dt * Nq * Res_dv;
