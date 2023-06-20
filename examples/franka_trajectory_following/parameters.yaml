@@ -1,10 +1,10 @@
 # bouncy ball parameters
 
 # impedance control parameters
-translational_stiffness: 500 # 400
-rotational_stiffness: 900
-translational_damping_ratio: 1
-rotational_damping: 20 # temporary increase for safety #10 to 50
+translational_stiffness: 800 # 400
+rotational_stiffness: 1500
+translational_damping_ratio: 10 # 1
+rotational_damping: 50 # temporary increase for safety # 10 to 50
 
 translational_integral_gain: 0
 rotational_integral_gain: 0
@@ -19,16 +19,16 @@ pushing_offset: 0 #-0.001
 # c3 parameters
 mu: 1                  # changes need to be consistent with urdf
 Q_default: 0
-Q_finger: 500         # finger xyz cost
-Q_ball_x: 10000 #10000
-Q_ball_y: 10000  #10000
-Q_finger_vel: 10        # translational velocity cost
-Q_ball_vel: 0.1         # angular & translational velocity cost
-Qnew_finger: 1000000    # Qnew costs
+Q_finger: 500   # 500      # finger xyz cost
+Q_ball_x: 50000 # 10000
+Q_ball_y: 50000 # 10000
+Q_finger_vel: 10        # 10 translational velocity cost
+Q_ball_vel: 0.1         # 0.1 angular & translational velocity cost
+Qnew_finger: 1000000    # 1000000  Qnew costs
 Qnew_ball_x: 1
 Qnew_ball_y: 1
 R: 0.01                 # torque cost in xyz
-G: 0.01
+G: 0.01                 # 0.01
 U_default: 1
 U_pos_vel: 10           # first 19 diag elements of U
 U_u: 1                  # last 3 diag elements of U
@@ -79,7 +79,7 @@ ball_stddev: 0.0 # standard deviation of 0-mean noise on ball state estimation
 # gaiting parameters
 roll_phase: 1  #2.5
 return_phase: 0.5 #0.75
-gait_parameters: [0.02, 0.0951, 0.0911, 0.0691] # try playing with first param here
+gait_parameters: [0.025, 0.0951, 0.0911, 0.0791] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
 # gait parameters represent height above the table
 
 # filters

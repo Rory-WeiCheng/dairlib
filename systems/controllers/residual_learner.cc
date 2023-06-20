@@ -18,7 +18,7 @@ ResidualLearner::ResidualLearner(){
   num_state = 19;
   num_velocity = 9;
   num_control = 3;
-  num_lambda = 12;
+  num_lambda = 8;
 
   state_input_port_ =
       this->DeclareVectorInputPort(

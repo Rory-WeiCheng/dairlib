@@ -6,7 +6,7 @@
 #include "external/drake/tools/install/libdrake/_virtual_includes/drake_shared_library/drake/common/sorted_pair.h"
 #include "external/drake/tools/install/libdrake/_virtual_includes/drake_shared_library/drake/multibody/plant/multibody_plant.h"
 #include "multibody/multibody_utils.h"
-#include "solvers/lcs_factory_franka_ref.h"
+#include "solvers/lcs_factory_franka_cvx_ref.h"
 
 #include "multibody/geom_geom_collider.h"
 #include "multibody/kinematic/kinematic_evaluator_set.h"
@@ -191,7 +191,7 @@ void Data_Generator::CalcData(const Context<double>& context,
   double dt = timestamp - prev_timestamp_;
 
   /// use the LCSFactoryFrankaRef which does not fix with residual lcs and scaling
-  auto system_scaling_pair =solvers::LCSFactoryFrankaRef::LinearizePlantToLCS(
+  auto system_scaling_pair =solvers::LCSFactoryFrankaConvexRef::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_,
       contact_geoms_, num_friction_directions_, mu_, 0.005);
 

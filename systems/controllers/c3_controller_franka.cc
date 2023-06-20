@@ -9,12 +9,10 @@
 #include "multibody/multibody_utils.h"
 #include "solvers/c3.h"
 #include "solvers/c3_miqp.h"
-#include "solvers/lcs_factory.h"
 
 #include "drake/solvers/moby_lcp_solver.h"
 #include "multibody/geom_geom_collider.h"
 #include "multibody/kinematic/kinematic_evaluator_set.h"
-#include "solvers/lcs_factory.h"
 #include "drake/math/autodiff_gradient.h"
 
 using std::vector;
@@ -93,7 +91,7 @@ C3Controller_franka::C3Controller_franka(
   // initialize warm start
   int time_horizon = 5;
   int nx = 19;
-  int nlambda = 12;
+  int nlambda = 8;
   int nu = 3;
 
   for (int i = 0; i < time_horizon; i++){
@@ -399,7 +397,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   contact_pairs.push_back(SortedPair(contact_geoms_[0], contact_geoms_[1]));
   contact_pairs.push_back(SortedPair(contact_geoms_[1], contact_geoms_[2]));
 
-  auto system_scaling_pair = solvers::LCSFactoryFranka::LinearizePlantToLCS(
+  auto system_scaling_pair = solvers::LCSFactoryFrankaConvex::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
       num_friction_directions_, mu_, 0.1, residual_lcs);
 
@@ -475,7 +473,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   }
 
   ///calculate state and force
-  auto system_scaling_pair2 = solvers::LCSFactoryFranka::LinearizePlantToLCS(
+  auto system_scaling_pair2 = solvers::LCSFactoryFrankaConvex::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
       num_friction_directions_, mu_, dt, residual_lcs);
 
@@ -485,7 +483,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   drake::solvers::MobyLCPSolver<double> LCPSolver;
   VectorXd force;
 
-  auto flag = LCPSolver.SolveLcpLemkeRegularized(system2_.F_[0], system2_.E_[0] * scaling2 * state + system2_.c_[0] * scaling2 + system2_.H_[0] * scaling2 * input,
+  auto flag = LCPSolver.SolveLcpLemke(system2_.F_[0], system2_.E_[0] * scaling2 * state + system2_.c_[0] * scaling2 + system2_.H_[0] * scaling2 * input,
                                                  &force);
   (void)flag; // suppress compiler unused variable warning
 
@@ -512,7 +510,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
 
 
   VectorXd force_des = VectorXd::Zero(6);
-  force_des << force(0), force(2), force(4), force(5), force(6), force(7);
+//  force_des << force(0), force(2), force(4), force(5), force(6), force(7);
 
 //  VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size());
   VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size() + input.size());

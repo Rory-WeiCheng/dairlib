@@ -146,11 +146,11 @@ int DoMain(int argc, char* argv[]){
   Qinit.block(10,10,3,3) << param.Q_finger_vel * MatrixXd::Identity(3,3);
   MatrixXd Rinit = param.R * MatrixXd::Identity(nu, nu);
 
-  MatrixXd Ginit = param.G * MatrixXd::Identity(nq+nv+nu+6*nc, nq+nv+nu+6*nc);
-  MatrixXd Uinit = param.U_default * MatrixXd::Identity(nq+nv+nu+6*nc, nq+nv+nu+6*nc);
+  MatrixXd Ginit = param.G * MatrixXd::Identity(nq+nv+nu+4*nc, nq+nv+nu+4*nc);
+  MatrixXd Uinit = param.U_default * MatrixXd::Identity(nq+nv+nu+4*nc, nq+nv+nu+4*nc);
   Uinit.block(0,0,nq+nv,nq+nv) << 
     param.U_pos_vel * MatrixXd::Identity(nq+nv,nq+nv);
-  Uinit.block(nq+nv+6*nc, nq+nv+6*nc, nu, nu) << 
+  Uinit.block(nq+nv+4*nc, nq+nv+4*nc, nu, nu) <<
     param.U_u * MatrixXd::Identity(nu, nu);
   
   VectorXd xdesiredinit = VectorXd::Zero(nq+nv);
@@ -319,12 +319,12 @@ int DoMain(int argc, char* argv[]){
 
   MatrixXd A_res = MatrixXd::Zero(9,19);
   MatrixXd B_res = MatrixXd::Zero(9,3);
-  MatrixXd D_res = MatrixXd::Zero(9,12);
+  MatrixXd D_res = MatrixXd::Zero(9,8);
   VectorXd d_res = VectorXd::Zero(9);
-  MatrixXd E_res = MatrixXd::Zero(12,19);
-  MatrixXd F_res = MatrixXd::Zero(12,12);
-  MatrixXd H_res = MatrixXd::Zero(12,3);
-  VectorXd c_res = VectorXd::Zero(12);
+  MatrixXd E_res = MatrixXd::Zero(8,19);
+  MatrixXd F_res = MatrixXd::Zero(8,8);
+  MatrixXd H_res = MatrixXd::Zero(8,3);
+  VectorXd c_res = VectorXd::Zero(8);
 
   int N_res = 1;
 //  std::cout<< "(" << D_res.rows() << ", " << D_res.cols() << ")"<<std::endl;
