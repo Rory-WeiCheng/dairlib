@@ -30,7 +30,7 @@ std::pair <LCS, double> LCSFactoryFrankaConvexRef::LinearizePlantToLCS(
     const MultibodyPlant<double>& plant, const Context<double>& context,
     const MultibodyPlant<AutoDiffXd>& plant_ad,
     const Context<AutoDiffXd>& context_ad,
-    std::vector<drake::geometry::GeometryId> contact_geoms_orig,
+    const std::vector<drake::geometry::GeometryId> contact_geoms_orig,
     int num_friction_directions, double mu, float dt) {
 
 

@@ -238,6 +238,7 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   D = D + Res_D;
   d = d + Res_d;
   E = E + Res_E;
+//  F = F + Res_F + 0.01 * MatrixXd::Identity(n_contact, n_contact);
   F = F + Res_F;
   H = H + Res_H;
   c = c + Res_c;
@@ -249,7 +250,7 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   auto Dn = D.squaredNorm();
   auto An = A.squaredNorm();
 //  auto AnDn = An / Dn * 2;
-  auto AnDn = 0.00002;
+  auto AnDn = 0.00004;
 
   // return a list of matrices
   std::vector<MatrixXd> A_lcs(N, A);

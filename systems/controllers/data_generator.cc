@@ -193,7 +193,7 @@ void Data_Generator::CalcData(const Context<double>& context,
   /// use the LCSFactoryFrankaRef which does not fix with residual lcs and scaling
   auto system_scaling_pair =solvers::LCSFactoryFrankaConvexRef::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_,
-      contact_geoms_, num_friction_directions_, mu_, 0.005);
+      contact_geoms_, num_friction_directions_, mu_, 0.1);
 
   LCS LCS_model = system_scaling_pair.first;
   VectorXd state_pred = system_scaling_pair.first.A_[0] * state

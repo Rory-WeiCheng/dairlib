@@ -175,7 +175,7 @@ int DoMain(int argc, char* argv[]){
   auto data_set_publisher = builder.AddSystem(
       LcmPublisherSystem::Make<dairlib::lcmt_learning_data>(
         "LEARNING_DATASET", pub_lcm,
-        {drake::systems::TriggerType::kPeriodic}, 0.5e-2));
+        {drake::systems::TriggerType::kPeriodic}, 0.005));
   builder.Connect(data_set_sender->get_output_port(),
                   data_set_publisher->get_input_port());
 

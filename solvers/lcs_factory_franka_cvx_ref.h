@@ -32,7 +32,7 @@ class LCSFactoryFrankaConvexRef {
       const drake::systems::Context<double>& context,
       const drake::multibody::MultibodyPlant<drake::AutoDiffXd>& plant_ad,
       const drake::systems::Context<drake::AutoDiffXd>& context_ad,
-      std::vector<drake::geometry::GeometryId> contact_geoms_orig,
+      const std::vector<drake::geometry::GeometryId> contact_geoms_orig,
       int num_friction_directions, double mu, float dt);
 };
 
