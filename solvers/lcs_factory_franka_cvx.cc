@@ -249,8 +249,8 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   // Scaling factor
   auto Dn = D.squaredNorm();
   auto An = A.squaredNorm();
-//  auto AnDn = An / Dn * 2;
-  auto AnDn = 0.00004;
+  auto AnDn = An / Dn;
+//  auto AnDn = 0.00004;
 
   // return a list of matrices
   std::vector<MatrixXd> A_lcs(N, A);

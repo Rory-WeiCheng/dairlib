@@ -67,7 +67,7 @@ VectorXd C3MIQP::SolveSingleProjection(const MatrixXd& U,
   }
 
   for (int i = 0; i < n_ + m_ + k_; i++) {
-    delta_k[i] = model.addVar(-10000.0, 10000.0, 0.0, GRB_CONTINUOUS);
+    delta_k[i] = model.addVar(-100000.0, 100000.0, 0.0, GRB_CONTINUOUS);
     if (warm_start_index != -1) {
       delta_k[i].set(GRB_DoubleAttr_Start, warm_start_delta_[warm_start_index](i));
     }
@@ -85,7 +85,7 @@ VectorXd C3MIQP::SolveSingleProjection(const MatrixXd& U,
 
   model.setObjective(obj, GRB_MINIMIZE);
 
-  int M = 100000;  // big M variable
+  int M = 1000000;  // big M variable
   double coeff[n_ + m_ + k_];
 
   for (int i = 0; i < m_; i++) {

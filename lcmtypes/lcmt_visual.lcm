@@ -1,0 +1,20 @@
+package dairlib;
+/*  lcmtype that carries the gradients
+*/
+struct lcmt_visual
+{
+  int16_t num_velocity;
+  int16_t num_lambda;
+
+  double d_grad[num_velocity];
+  double c_grad[num_lambda];
+  double dyn_error_check[num_velocity];
+  double lcp_error_check[num_lambda];
+  double lambda_check[num_lambda];
+  double res_check[num_velocity];
+  double lambda_n[2];
+
+  double total_loss;
+  double dyn_loss;
+  double lcp_loss;
+}

@@ -1,17 +1,17 @@
 # bouncy ball parameters
 
 # impedance control parameters
-translational_stiffness: 1000 # 400
-rotational_stiffness: 1500
-translational_damping_ratio: 10 # 1
-rotational_damping: 50 # temporary increase for safety # 10 to 50
+translational_stiffness: 1500 #500
+rotational_stiffness: 1200   #900
+translational_damping_ratio: 20 # 1
+rotational_damping: 50 # temporary increase for safety # 10 to 50   #50
 
 translational_integral_gain: 0
 rotational_integral_gain: 0
 integrator_clamp: [30, 30, 30, 30, 8, 8, 8]
 
-stiffness_null: 4
-damping_null: 4
+stiffness_null: 4 #4
+damping_null: 4 #4
 q_null_desired: [0, 0.361, 0, -2.223, 0, 2.584, 0]
 moving_offset: 0 #0.0005
 pushing_offset: 0 #-0.001
@@ -20,8 +20,8 @@ pushing_offset: 0 #-0.001
 mu: 1                  # changes need to be consistent with urdf
 Q_default: 0
 Q_finger: 500   # 500      # finger xyz cost
-Q_ball_x: 50000 # 10000
-Q_ball_y: 50000 # 10000
+Q_ball_x: 1000000 # 10000
+Q_ball_y: 1000000 # 10000
 Q_finger_vel: 10        # 10 translational velocity cost
 Q_ball_vel: 0.1         # 0.1 angular & translational velocity cost
 Qnew_finger: 1000000    # 1000000  Qnew costs
@@ -31,7 +31,7 @@ R: 0.01                 # torque cost in xyz
 G: 0.01                 # 0.01
 U_default: 1
 U_pos_vel: 10           # first 19 diag elements of U
-U_u: 1                  # last 3 diag elements of U
+U_u: 1                # last 3 diag elements of U
 q_init_finger: [0, 0, 0.085] #[0, 0, 0.0775] CHANGED THIS
 q_init_ball_c3: [1, 0, 0, 0, 0.05, 0.05, 0.03] # last 3 elements don't matter
 dt: 0.015 # 0.03
@@ -60,7 +60,7 @@ time_increment: 1
 hold_order: 0 # 0 for zero order hold, 1 for first order hold
 
 # if enable_adaptive_path is set to 1, the trajectory above is not used
-lead_angle: -10 # angle in degrees
+lead_angle: 20 # angle in degrees
 enable_adaptive_path: 1 # 0 to use regular path, 1 to use path that adjusts to ball in real time
 
 # geometry parameters
@@ -74,12 +74,12 @@ model_table_offset: -0.0245 #-0.0245 # changes need to be consistent with model 
 contact_threshold: 0.01
 enable_heuristic: 0
 enable_contact: 1
-ball_stddev: 0.0 # standard deviation of 0-mean noise on ball state estimation
+ball_stddev: 0.00 # standard deviation of 0-mean noise on ball state estimation
 
 # gaiting parameters
 roll_phase: 1  #2.5
 return_phase: 0.5 #0.75
-gait_parameters: [0.02, 0.0951, 0.0911, 0.0791] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
+gait_parameters: [0.022, 0.0951, 0.0911, 0.0741] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
 # gait parameters represent height above the table
 
 # filters
