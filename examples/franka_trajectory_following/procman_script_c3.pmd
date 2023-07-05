@@ -95,7 +95,7 @@ group "7.[SIM] C3" {
             host = "localhost";
     }
     cmd "g.[SIM] adaptive module" {
-        exec = "bazel-bin/examples/franka_trajectory_following/legacy/call_adaptive";
+        exec = "bazel-bin/examples/franka_trajectory_following/lcm_call_adaptive";
         host = "localhost";
     }
     cmd "h.[HELPER] adaptive module (all zero)" {

@@ -114,6 +114,17 @@ cc_binary(
             "@drake//manipulation/models/franka_description:models"]
 )
 
+py_binary(
+    name = "lcm_call_adaptive",
+    srcs = ["lcm_call_adaptive.py"],
+    deps = [
+        "//bindings/pydairlib",
+        "@drake//bindings/pydrake",
+    ],
+    data = [":trifinger_urdf",
+            "@drake//manipulation/models/franka_description:models"],
+)
+
 # cc_binary(
 #    name = "run_impedance_experiment",
 #    srcs = ["run_impedance_experiment.cc"],

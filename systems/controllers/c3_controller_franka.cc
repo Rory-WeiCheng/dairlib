@@ -22,6 +22,11 @@ using drake::AutoDiffXd;
 using drake::MatrixX;
 using drake::SortedPair;
 using drake::geometry::GeometryId;
+
+/// 2023.7.03 add new inspector
+using drake::geometry::SceneGraphInspector;
+using drake::geometry::ShapeReifier;
+
 using drake::multibody::MultibodyPlant;
 using drake::systems::Context;
 using drake::multibody::JacobianWrtVariable;
@@ -170,7 +175,8 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
   double x_c = param_.x_c;
   double y_c = param_.y_c;
   double traj_radius = param_.traj_radius;
-  double ball_radius = param_.ball_radius;
+//  double ball_radius = param_.ball_radius;
+  double ball_radius = param_.ball_model_radius;
   double table_offset = param_.table_offset;
 
   if (timestamp <= settling_time){
@@ -296,31 +302,42 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
   if (shifted_time < 0) shifted_time += period;
   double ts = shifted_time - period * floor((shifted_time / period));
   double back_dist = param_.gait_parameters(0);
-  
+//  double back_dist = param_.gait_parameters(0) + (ball_radius - 0.0315);
+
+  /// 2023.7.03 add inspector to get the radius of the sphere model and adjust the
+  /// gait parameters based on the radius, currently only use ball_radius (link with)
+  /// ball_model_radius in yaml file
+  const SceneGraphInspector<double>& inspector = scene_graph_.model_inspector();
+//  ball_urdf_radius = inspector.GetShape(contact_geoms_[1]).Reify(
+//      ShapeReifier.ImplementGeometry(const Sphere&, void*));
+
   /// rolling phase
   if ( ts < roll_phase ) {
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7];
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8];
-    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] + 0.004;
+//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] + 0.004;
+    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] + 0.004 + 2 * (ball_radius - 0.0315);
   }
   /// upwards phase
   else if (ts < roll_phase + return_phase / 3){
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[0]; //0.55;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[1]; //0.1;
-    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + table_offset;
-
+//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + table_offset;
+    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + 2 * (ball_radius - 0.0315) + table_offset;
   }
   /// side ways phase
   else if( ts < roll_phase + 2 * return_phase / 3 ) {
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7] - back_dist*error_hat(0);
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8] - back_dist*error_hat(1);
-    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + table_offset;
+//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + table_offset;
+    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + 2 * (ball_radius - 0.0315) + table_offset;
   }
   /// position finger phase
   else{
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7] - back_dist*error_hat(0);
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8] - back_dist*error_hat(1);
-    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + table_offset;
+//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + table_offset;
+    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + 2 * (ball_radius - 0.0315) + table_offset;
   }
   std::vector<VectorXd> traj_desired(Q_.size() , traj_desired_vector);
 
@@ -592,7 +609,8 @@ void C3Controller_franka::StateEstimation(Eigen::VectorXd& q_plant, Eigen::Vecto
   /// estimate v_plant
 //  std::cout << "before\n" << v_plant.tail(6) << std::endl;
   double alpha_v = param_.alpha_v;
-  double ball_radius = param_.ball_radius;
+//  double ball_radius = param_.ball_radius;
+  double ball_radius = param_.ball_model_radius;
 
   ///1
   Vector3d ball_xyz_dot = v_plant.tail(3);
@@ -619,7 +637,8 @@ Eigen::Vector3d C3Controller_franka::ProjectStateEstimate(
     const Eigen::Vector3d& estimate) const {
 
   Eigen::Vector3d dist_vec = estimate - endeffector;
-  double R = param_.ball_radius;
+//  double R = param_.ball_radius;
+  double R = param_.ball_model_radius;
   double r = param_.finger_radius;
   
   if (dist_vec.norm() < (R+r)*(1)){

@@ -27,7 +27,8 @@ C3StateEstimator::C3StateEstimator(const std::vector<double>& p_FIR_values,
   Vector3d initial_position;
   initial_position(0) = param_.x_c + param_.traj_radius * sin(param_.phase * 3.14159265 / 180);
   initial_position(1) = param_.y_c + param_.traj_radius * cos(param_.phase * 3.14159265 / 180);
-  initial_position(2) = param_.ball_radius + param_.table_offset;
+//  initial_position(2) = param_.ball_radius + param_.table_offset;
+  initial_position(2) = param_.ball_model_radius + param_.table_offset;
   VectorXd initial_orientation = VectorXd::Zero(4);
   initial_orientation << 1, 0, 0, 0;
 
@@ -119,7 +120,8 @@ EventStatus C3StateEstimator::UpdateHistory(const Context<double>& context,
       state->get_mutable_discrete_state(v_idx_).get_mutable_value() << estimated_velocity;
 
       ///  estimate angular velocity
-      double ball_radius = param_.ball_radius;
+//      double ball_radius = param_.ball_radius;
+      double ball_radius = param_.ball_model_radius;
       Vector3d r_ball(0, 0, ball_radius);
       Vector3d w = r_ball.cross(estimated_velocity) / (ball_radius * ball_radius);
       state->get_mutable_discrete_state(w_idx_).get_mutable_value() << w;
@@ -222,7 +224,8 @@ FrankaBallToBallPosition::FrankaBallToBallPosition(
   Vector3d initial_position;
   initial_position(0) = param_.x_c + param_.traj_radius * sin(param_.phase * 3.14159265 / 180);
   initial_position(1) = param_.y_c + param_.traj_radius * cos(param_.phase * 3.14159265 / 180);
-  initial_position(2) = param_.ball_radius + param_.table_offset;
+//  initial_position(2) = param_.ball_radius + param_.table_offset;
+  initial_position(2) = param_.ball_model_radius + param_.table_offset;
 
   p_idx_ = this->DeclareDiscreteState(initial_position);
   id_idx_ = this->DeclareDiscreteState(1); // automatically initialized to 0;
@@ -259,7 +262,7 @@ EventStatus FrankaBallToBallPosition::UpdateBallPosition(
     double x_noise = d(gen);
     double y_noise = d(gen);
 
-    double noise_threshold = 0.0001;
+    double noise_threshold = 0.001;
     if (x_noise > noise_threshold) {
       x_noise = noise_threshold;
     } else if (x_noise < -noise_threshold) {

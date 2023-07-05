@@ -7,7 +7,7 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 struct C3Parameters {
-  // must be serialized in same order as struct
+  // must be serialized in same order as structa
   template <typename Archive>
   void Serialize(Archive* a) {
     // impedance control parameters
@@ -71,6 +71,7 @@ struct C3Parameters {
     
     // geometry parameters
     a->Visit(DRAKE_NVP(ball_radius));
+    a->Visit(DRAKE_NVP(ball_model_radius));
     a->Visit(DRAKE_NVP(finger_radius));
     a->Visit(DRAKE_NVP(EE_offset));
     a->Visit(DRAKE_NVP(table_offset));
@@ -152,6 +153,7 @@ struct C3Parameters {
 
   // geometry parameters
   double ball_radius;
+  double ball_model_radius;
   double finger_radius;
   VectorXd EE_offset;
   double table_offset;
