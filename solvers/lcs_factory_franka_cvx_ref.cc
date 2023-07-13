@@ -215,6 +215,9 @@ std::pair <LCS, double> LCSFactoryFrankaConvexRef::LinearizePlantToLCS(
   H = dt * J_c * AB_v_u;
 
   c = E_t.transpose() * phi / dt + dt * J_c * d_v;
+//  std::cout<< "Bias Term" << std::endl;
+//  std::cout<< dt * J_c * d_v << std::endl;
+
 
 //  for data collecting, we don't want to scale the complementarity part
 //  auto Dn = D.squaredNorm();

@@ -41,6 +41,7 @@ using drake::systems::Context;
 using drake::systems::LeafSystem;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
+using Eigen::Vector3d;
 
 namespace dairlib {
 namespace systems {
@@ -94,6 +95,11 @@ class Data_Generator : public LeafSystem<double> {
   mutable double prev_timestamp_{0};
   mutable bool received_first_message_{false};
   mutable double first_message_time_{-1.0};
+  mutable Vector3d prev_position_{Vector3d::Zero()};
+  mutable Vector3d prev_velocity_{Vector3d::Zero()};
+  mutable std::vector<double> p_IIR_values_{{0.1, 0.9}};
+  mutable std::vector<double> v_IIR_values_{{0.1, 0.9}};
+
 };
 
 }  // namespace controllers

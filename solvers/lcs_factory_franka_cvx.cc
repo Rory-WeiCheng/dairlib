@@ -204,6 +204,8 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   H = dt * J_c * AB_v_u;
 
   c = E_t.transpose() * phi / dt + dt * J_c * d_v;
+//  std::cout<< "Bias Term" << std::endl;
+//  std::cout<< dt * J_c * d_v << std::endl;
 
   // ------------------------------------------------------------------------ //
   /// Finally, consider residual lcs input and return the final lcs

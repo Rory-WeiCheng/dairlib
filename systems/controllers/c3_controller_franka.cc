@@ -9,6 +9,7 @@
 #include "multibody/multibody_utils.h"
 #include "solvers/c3.h"
 #include "solvers/c3_miqp.h"
+#include "solvers/c3_approx.h"
 
 #include "drake/solvers/moby_lcp_solver.h"
 #include "multibody/geom_geom_collider.h"
@@ -316,7 +317,7 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7];
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8];
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] + 0.004;
-    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] + 0.004 + 2 * (ball_radius - 0.0315);
+    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] + 2 * (ball_radius - 0.0315);
   }
   /// upwards phase
   else if (ts < roll_phase + return_phase / 3){
@@ -418,10 +419,16 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
       num_friction_directions_, mu_, 0.1, residual_lcs);
 
-
   solvers::LCS system_ = system_scaling_pair.first;
-  // double scaling = system_scaling_pair.second;
-  
+  double scaling = system_scaling_pair.second;
+
+//  MatrixXd D_check = system_.D_[0].block(16,0,3,8).transpose() * system_.D_[0].block(16,0,3,8);
+//  MatrixXd D_check = (system_.D_[0].transpose()/ scaling)  * (system_.D_[0] / scaling);
+//  Eigen::FullPivLU<MatrixXd> lu_decomp(D_check);
+//  auto rank = lu_decomp.rank();
+//  std::cout<< "rank test" << std::endl;
+//  std::cout<< rank << std::endl;
+
   C3Options options;
   int N = (system_.A_).size();
   int n = ((system_.A_)[0].cols());
@@ -488,16 +495,24 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
     }
     dt /= moving_average_.size();
   }
+  /// check the force given by first LCS
+  drake::solvers::MobyLCPSolver<double> LCPSolver;
+  VectorXd force_checking;
 
-  ///calculate state and force
+  auto flag_checking = LCPSolver.SolveLcpLemke(system_.F_[0], system_.E_[0] * scaling * state + system_.c_[0] * scaling + system_.H_[0] * scaling * input,
+                                        &force_checking);
+  (void)flag_checking; // suppress compiler unused variable warning
+
+  ///calculate state and force, try to change the
+  residual_lcs.c_[0] = residual_lcs.c_[0] * 0.1 / dt;
   auto system_scaling_pair2 = solvers::LCSFactoryFrankaConvex::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
-      num_friction_directions_, mu_, dt, residual_lcs);
+      num_friction_directions_, mu_, 0.1, residual_lcs);
 
   solvers::LCS system2_ = system_scaling_pair2.first;
   double scaling2 = system_scaling_pair2.second;
 
-  drake::solvers::MobyLCPSolver<double> LCPSolver;
+//  drake::solvers::MobyLCPSolver<double> LCPSolver;
   VectorXd force;
 
   auto flag = LCPSolver.SolveLcpLemke(system2_.F_[0], system2_.E_[0] * scaling2 * state + system2_.c_[0] * scaling2 + system2_.H_[0] * scaling2 * input,
@@ -505,6 +520,11 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   (void)flag; // suppress compiler unused variable warning
 
   VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.D_[0] * force / scaling2 + system2_.d_[0];
+  VectorXd direction = (state_next - state);
+  state_next = state + (direction / direction.norm()) / 0.1 * dt;
+    /// check contact force
+//  std::cout << "force (EE)" << std::endl;
+//  std::cout << force.head(4) << std::endl;
 
   // check if the desired end effector position is unreasonably far from the current location
   Vector3d vd = state_next.segment(10, 3);
@@ -518,7 +538,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
     state_next(10) = clamped_velocity(0);
     state_next(11) = clamped_velocity(1);
     state_next(12) = clamped_velocity(2);
-//    std::cout << "velocity limit(c3)" << std::endl;
+    std::cout << "velocity limit(c3)" << std::endl;
 
     /// update the user
     // std::cout << "The desired EE velocity was " << vd.norm() << "m/s. ";
@@ -528,6 +548,15 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
 
   VectorXd force_des = VectorXd::Zero(6);
 //  force_des << force(0), force(2), force(4), force(5), force(6), force(7);
+  force_des(0) = force_checking(0) + force_checking(1) + force_checking(2) + force_checking(3);
+
+  residual_lcs.c_[0] = residual_lcs.c_[0] * dt / 0.1;
+//  VectorXd Dist = system_.E_[0] * scaling * state + system_.c_[0] * scaling + system_.H_[0] * scaling * input + system_.F_[0] * force_checking;
+  VectorXd Dist = system_.E_[0] * scaling * state + system_.H_[0] * scaling * input + system_.F_[0] * force_checking;
+
+  double Resc_avg = (residual_lcs.c_[0](0) + residual_lcs.c_[0](1) + residual_lcs.c_[0](2) + residual_lcs.c_[0](3)) / 4;
+  double Dist_avg = (Dist(0) + Dist(1) + Dist(2) + Dist(3)) / 4;
+  force_des(1) = Resc_avg;
 
 //  VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size());
   VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size() + input.size());
@@ -581,7 +610,7 @@ void C3Controller_franka::StateEstimation(Eigen::VectorXd& q_plant, Eigen::Vecto
     double dist_y = d(gen);
 
 
-    double noise_threshold = 0.01;
+    double noise_threshold = 0.005;
     if (dist_x > noise_threshold) {
       dist_x = noise_threshold;
     } else if (dist_x < -noise_threshold) {

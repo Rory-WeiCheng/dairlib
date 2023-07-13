@@ -164,7 +164,7 @@ void ImpedanceController::CalcControl(const Context<double>& context,
   xd.tail(3) << state.head(3);
   Quaterniond orientation_d(state(3), state(4), state(5), state(6));
   xd_dot.tail(3) << state.segment(14, 3);
-  lambda << state.segment(24, 5);
+//  lambda << state.segment(24, 5);
   
   //update the context_
   plant_.SetPositions(&context_, q);

@@ -70,6 +70,7 @@ def passthrough_callback(data, *args, **kwargs):
 channels = {
     "FRANKA_OUTPUT": dairlib.lcmt_robot_output,
     "FRANKA_STATE_ESTIMATE":dairlib.lcmt_robot_output,
+    "STATE_ESTIMATE_RAW": dairlib.lcmt_robot_output,
     "CONTACT_RESULTS": drake.lcmt_contact_results_for_viz,
     "CONTROLLER_INPUT": dairlib.lcmt_c3,
 }
@@ -168,7 +169,7 @@ def processing_callback(data, channel):
 
     '''
     # pdb.set_trace()
-    if channel == "FRANKA_OUTPUT":
+    if channel == "FRANKA_OUTPUT" or channel == "STATE_ESTIMATE_RAW":
         # initialize the empty list to record the data
         position = []
         velocity = []
@@ -296,6 +297,8 @@ def main():
     # get the states and inputs
     log = lcm.EventLog(logfile, "r")
     position, velocity, effort ,acceleration, timestamp_state = get_log_data(log, channels, -1, processing_callback, "FRANKA_OUTPUT")
+    log = lcm.EventLog(logfile, "r")
+    position_raw, velocity_raw, effort_raw ,acceleration_raw, timestamp_state_raw = get_log_data(log, channels, -1, processing_callback, "STATE_ESTIMATE_RAW")
 
     # # briefly check the result
     # plt.plot(position[11], position[12])
@@ -348,6 +351,18 @@ def main():
     # scipy.io.savemat(mat_file, mdic_state_input)
     # save as npz file (numpy array)
     npz_file = "State_Input-{}.npz".format(log_num)
+    np.savez(npz_file,**mdic_state_input)
+    print("finished creating state/input file")
+
+    # Creating save file for states and inputs
+    print("creating state/input mat and npz files")
+    mdic_state_input = {"q": position_raw[0:7,:],"R_b": position_raw[7:11,:],"p_b": position_raw[11:,:],"q_dot":velocity_raw[0:7,:], \
+                        "w_b": velocity_raw[7:10,:],"v_b": velocity_raw[10:,:], "u":effort_raw, "a":acceleration_raw, "timestamp_state": timestamp_state_raw}
+    # # save as mat file (matlab)
+    # mat_file = "State_Input-{}.mat".format(log_num)
+    # scipy.io.savemat(mat_file, mdic_state_input)
+    # save as npz file (numpy array)
+    npz_file = "State_Input_Raw-{}.npz".format(log_num)
     np.savez(npz_file,**mdic_state_input)
     print("finished creating state/input file")
 

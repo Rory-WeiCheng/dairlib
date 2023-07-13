@@ -68,8 +68,12 @@ int DoMain(int argc, char* argv[]) {
   int v_filter_length = 2;
   double alpha = 0.9;
 
-  std::vector<double> p_FIR_values = {0.2, 0.8};
-  std::vector<double> v_FIR_values = {(1-alpha), alpha};
+//  std::vector<double> p_FIR_values = {0.03, 0.97};
+  std::vector<double> p_FIR_values = {0.2, 0.2, 0.2, 0.2, 0.2};
+//  std::vector<double> v_FIR_values = {(1-alpha), alpha};
+//  std::vector<double> v_FIR_values = {0.5, 0.5};
+  std::vector<double> v_FIR_values = {0.2, 0.2, 0.2, 0.2, 0.2};
+
 
   auto state_estimator = 
     builder.AddSystem<dairlib::systems::C3StateEstimator>(p_FIR_values, v_FIR_values);
@@ -115,7 +119,19 @@ int DoMain(int argc, char* argv[]) {
     sender->get_input_port(0));
   builder.Connect(state_estimator->get_output_port(1), 
     sender->get_input_port(1));
-  builder.Connect(*sender, *robot_output_pub);  
+  builder.Connect(*sender, *robot_output_pub);
+
+// extra port that publish the not filtered (raw) data
+  auto sender_raw = builder.AddSystem<dairlib::systems::RobotOutputSender>(plant, true);
+  auto robot_data_checking = builder.AddSystem(
+      LcmPublisherSystem::Make<dairlib::lcmt_robot_output>(
+          "STATE_ESTIMATE_RAW", pub_lcm,
+          {drake::systems::TriggerType::kForced}));
+  builder.Connect(state_estimator->get_output_port(2),
+                  sender_raw->get_input_port(0));
+  builder.Connect(state_estimator->get_output_port(1),
+                  sender_raw->get_input_port(1));
+  builder.Connect(*sender_raw, *robot_data_checking);
 
 
   auto sys = builder.Build();

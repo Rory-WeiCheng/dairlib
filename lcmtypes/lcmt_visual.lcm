@@ -13,6 +13,7 @@ struct lcmt_visual
   double lambda_check[num_lambda];
   double res_check[num_velocity];
   double lambda_n[2];
+  double Dlambda_check[num_velocity];
 
   double total_loss;
   double dyn_loss;

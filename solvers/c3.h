@@ -10,6 +10,7 @@
 
 #include "drake/solvers/mathematical_program.h"
 #include "drake/solvers/osqp_solver.h"
+#include "drake/solvers/equality_constrained_qp_solver.h"
 #include "drake/solvers/solve.h"
 
 namespace dairlib {
@@ -123,6 +124,7 @@ protected:
   drake::solvers::MathematicalProgram prog_;
   drake::solvers::SolverOptions OSQPoptions_;
   drake::solvers::OsqpSolver osqp_;
+//  drake::solvers::EqualityConstrainedQPSolver osqp_;
   std::vector<drake::solvers::VectorXDecisionVariable> x_;
   std::vector<drake::solvers::VectorXDecisionVariable> u_;
   std::vector<drake::solvers::VectorXDecisionVariable> lambda_;

@@ -8,6 +8,7 @@
 #include "drake/solvers/mathematical_program.h"
 #include "drake/solvers/moby_lcp_solver.h"
 #include "drake/solvers/osqp_solver.h"
+#include "drake/solvers/equality_constrained_qp_solver.h"
 #include "drake/solvers/solve.h"
 
 namespace dairlib {

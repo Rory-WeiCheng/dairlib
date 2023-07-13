@@ -70,6 +70,11 @@ C3StateEstimator::C3StateEstimator(const std::vector<double>& p_FIR_values,
       "u",
       BasicVector<double>(num_franka_efforts_ + num_ball_efforts_),
       &C3StateEstimator::OutputEfforts);
+  this->DeclareVectorOutputPort(
+      "x_check",
+      BasicVector<double>(num_franka_positions_ + num_ball_positions_ +
+                          num_franka_velocities_ + num_ball_velocities_),
+      &C3StateEstimator::StateRaw);
 }
 
 EventStatus C3StateEstimator::UpdateHistory(const Context<double>& context,
@@ -103,6 +108,9 @@ EventStatus C3StateEstimator::UpdateHistory(const Context<double>& context,
       p_history.pop_front();
 
       Vector3d estimated_position = VectorXd::Zero(3);
+//      2023.7.5 change from FIR to exponential smoothing (IIR)
+//      estimated_position = p_FIR_values_[0] * p_history[p_filter_length_-1] + p_FIR_values_[1] * prev_position;
+
       for (int i = 0; i < p_filter_length_; i++){
         estimated_position += p_FIR_values_[i] * p_history[i];
       }
@@ -114,8 +122,21 @@ EventStatus C3StateEstimator::UpdateHistory(const Context<double>& context,
       v_history.pop_front();
 
       Vector3d estimated_velocity = VectorXd::Zero(3);
+//      2023.7.5 change from FIR to exponential smoothing (IIR)
+//      Vector3d prev_velocity = state->get_discrete_state(v_idx_).value();
+//      estimated_velocity = v_FIR_values_[0] * v_history[p_filter_length_-1] + v_FIR_values_[1] * prev_velocity;
+
       for (int i = 0; i < v_filter_length_; i++){
         estimated_velocity += v_FIR_values_[i] * v_history[i];
+      }
+//      2023.7.4 add estimated velocity limit and increase filter history length
+      for (int i = 0; i < estimated_velocity.size(); i++){
+        if (estimated_velocity(i) >= 0.05) {
+          estimated_velocity(i) = 0.05;
+        }
+        if (estimated_velocity(i) <= -0.05) {
+          estimated_velocity(i) = -0.05;
+        }
       }
       state->get_mutable_discrete_state(v_idx_).get_mutable_value() << estimated_velocity;
 
@@ -195,6 +216,47 @@ void C3StateEstimator::OutputEfforts(const drake::systems::Context<double>& cont
   }
 
   output->SetFromVector(efforts);  
+}
+
+void C3StateEstimator::StateRaw(const drake::systems::Context<double>& context,
+                                     BasicVector<double>* output) const {
+
+  /// parse inputs
+  const drake::AbstractValue* input = this->EvalAbstractInput(context, franka_input_port_);
+  DRAKE_ASSERT(input != nullptr);
+  const auto& franka_output = input->get_value<dairlib::lcmt_robot_output>();
+  auto& p_history = context.get_abstract_state<std::deque<Vector3d>>(p_history_idx_);
+  auto& v_history = context.get_abstract_state<std::deque<Vector3d>>(v_history_idx_);
+
+  /// read in estimates froms states
+  Vector3d ball_position = p_history[p_filter_length_-1];
+  Vector3d ball_velocity = v_history[v_filter_length_-1];
+
+  /// calculate angular velocity and orientation (actually don't care)
+  double ball_radius = param_.ball_model_radius;
+  Vector3d r_ball(0, 0, ball_radius);
+  Vector3d angular_velocity = r_ball.cross(ball_velocity) / (ball_radius * ball_radius);
+
+  VectorXd ball_orientation = context.get_discrete_state(orientation_idx_).value();
+
+  /// generate output
+  // NOTE: vector sizes are hard coded for C3 experiments
+  VectorXd positions = VectorXd::Zero(num_franka_positions_ + num_ball_positions_);
+  for (int i = 0; i < num_franka_positions_; i++){
+    positions(i) = franka_output.position[i];
+  }
+  positions.tail(num_ball_positions_) << ball_orientation, ball_position;
+
+  VectorXd velocities = VectorXd::Zero(
+      num_franka_velocities_ + num_ball_velocities_);
+  for (int i = 0; i < num_franka_velocities_; i++){
+    velocities(i) = franka_output.velocity[i];
+  }
+  velocities.tail(num_ball_velocities_) << angular_velocity, ball_velocity;
+
+  VectorXd value = VectorXd::Zero(14+13);
+  value << positions, velocities;
+  output->SetFromVector(value);
 }
 
 RotationMatrix<double> C3StateEstimator::RodriguesFormula(const Vector3d& axis, double theta) const {

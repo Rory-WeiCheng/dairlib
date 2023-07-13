@@ -158,9 +158,22 @@ void Data_Generator::CalcData(const Context<double>& context,
   VectorXd q_plant = robot_output->GetPositions();
   VectorXd v_plant = robot_output->GetVelocities();
 
-  // parse franka state info
+  // parse franka state info, 2023.7.10 add extra exponential filter here
   VectorXd ball = q_plant.tail(7);
+  ball.tail(3) = p_IIR_values_[0] * ball.tail(3) + p_IIR_values_[1] * prev_position_;
+  prev_position_ = ball.tail(3);
+
   VectorXd ball_dot = v_plant.tail(6);
+  ball_dot.tail(3) = v_IIR_values_[0] * ball_dot.tail(3) + v_IIR_values_[1] * prev_velocity_;
+  Vector3d ball_velocity = ball_dot.tail(3);
+
+  double ball_radius = param_.ball_model_radius;
+  Vector3d r_ball(0, 0, ball_radius);
+  Vector3d angular_velocity = r_ball.cross(ball_velocity) / (ball_radius * ball_radius);
+  ball_dot.head(3) = angular_velocity;
+
+  prev_velocity_ = ball_dot.tail(3);
+
 
   VectorXd q(10);
   q << end_effector, ball;
@@ -169,7 +182,7 @@ void Data_Generator::CalcData(const Context<double>& context,
   VectorXd u = c3_input.tail(3);
 
   VectorXd state(plant_.num_positions() + plant_.num_velocities());
-  state << end_effector, q_plant.tail(7), end_effector_dot, v_plant.tail(6);
+  state << end_effector, q.tail(7), end_effector_dot, v.tail(6);
 
   /// update autodiff
   VectorXd xu(plant_f_.num_positions() + plant_f_.num_velocities() +
