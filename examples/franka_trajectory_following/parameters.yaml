@@ -20,8 +20,8 @@ pushing_offset: 0 #-0.001
 mu: 1                  # changes need to be consistent with urdf
 Q_default: 0
 Q_finger: 500   # 500      # finger xyz cost
-Q_ball_x: 1000000 # 10000
-Q_ball_y: 1000000 # 10000
+Q_ball_x: 100000 # 10000
+Q_ball_y: 100000 # 10000
 Q_finger_vel: 10        # 10 translational velocity cost
 Q_ball_vel: 0.1         # 0.1 angular & translational velocity cost
 Qnew_finger: 1000000    # 1000000  Qnew costs
@@ -35,7 +35,7 @@ U_u: 1                # last 3 diag elements of U
 q_init_finger: [0, 0, 0.085] #[0, 0, 0.0775] CHANGED THIS
 q_init_ball_c3: [1, 0, 0, 0, 0.05, 0.05, 0.03] # last 3 elements don't matter
 dt: 0.015 # 0.03
-velocity_limit: 0.1
+velocity_limit: 1
 orientation_degrees: 15
 axis_option: 1
 
@@ -64,8 +64,8 @@ lead_angle: 20 # angle in degrees
 enable_adaptive_path: 1 # 0 to use regular path, 1 to use path that adjusts to ball in real time
 
 # geometry parameters
-ball_radius: 0.0315           # changes need to be consistent with sphere urdf, geometry mesh, AND vision
-ball_model_radius: 0.0345     # changes need to be consistent with sphere_model urdf (collision part), geometry mesh, AND vision
+ball_radius: 0.0365           # changes need to be consistent with sphere urdf, geometry mesh, AND vision
+ball_model_radius: 0.0365     # changes need to be consistent with sphere_model urdf (collision part), geometry mesh, AND vision
 finger_radius: 0.0195         # changes need to be consistent with franka_box and model urdfs
 EE_offset: [0, 0, 0.0153]     # changes need to be consistent with franka_box urdf
 table_offset: -0.0245 #-0.0245      # chances need to be consistent with franka_box, model urdf, AND vision
@@ -79,9 +79,8 @@ ball_stddev: 0.001 # standard deviation of 0-mean noise on ball state estimation
 
 # gaiting parameters
 roll_phase: 1  #2.5
-return_phase: 0.5 #0.75
-#gait_parameters: [0.022, 0.0951, 0.0911, 0.0741] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
-gait_parameters: [0.022, 0.0901, 0.0861, 0.0691] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
+return_phase: 0.4 #0.75
+gait_parameters: [0.022, 0.0911, 0.0871, 0.0701] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
 # gait parameters represent height above the table
 
 # filters

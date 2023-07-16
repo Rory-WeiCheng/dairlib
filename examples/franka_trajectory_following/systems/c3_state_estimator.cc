@@ -324,7 +324,7 @@ EventStatus FrankaBallToBallPosition::UpdateBallPosition(
     double x_noise = d(gen);
     double y_noise = d(gen);
 
-    double noise_threshold = 0.001;
+    double noise_threshold = 0.01;
     if (x_noise > noise_threshold) {
       x_noise = noise_threshold;
     } else if (x_noise < -noise_threshold) {

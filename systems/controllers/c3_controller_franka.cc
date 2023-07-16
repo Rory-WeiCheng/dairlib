@@ -317,7 +317,7 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7];
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8];
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] + 0.004;
-    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] + 2 * (ball_radius - 0.0315);
+    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")];
   }
   /// upwards phase
   else if (ts < roll_phase + return_phase / 3){
@@ -503,8 +503,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
                                         &force_checking);
   (void)flag_checking; // suppress compiler unused variable warning
 
-  ///calculate state and force, try to change the
-  residual_lcs.c_[0] = residual_lcs.c_[0] * 0.1 / dt;
+  /// still use the 0.1s to generate lcs
   auto system_scaling_pair2 = solvers::LCSFactoryFrankaConvex::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
       num_friction_directions_, mu_, 0.1, residual_lcs);
@@ -519,9 +518,13 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
                                                  &force);
   (void)flag; // suppress compiler unused variable warning
 
-  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.D_[0] * force / scaling2 + system2_.d_[0];
-  VectorXd direction = (state_next - state);
-  state_next = state + (direction / direction.norm()) / 0.1 * dt;
+//  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.D_[0] * force / scaling2 + system2_.d_[0];
+  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.d_[0];
+  VectorXd direction = (state_next - state); // no need to do normalization
+  state_next = state + direction / 0.1 * dt;
+
+//  std::cout<< 1 / 0.1 * dt << std::endl;
+
     /// check contact force
 //  std::cout << "force (EE)" << std::endl;
 //  std::cout << force.head(4) << std::endl;
@@ -550,7 +553,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
 //  force_des << force(0), force(2), force(4), force(5), force(6), force(7);
   force_des(0) = force_checking(0) + force_checking(1) + force_checking(2) + force_checking(3);
 
-  residual_lcs.c_[0] = residual_lcs.c_[0] * dt / 0.1;
+//  residual_lcs.c_[0] = residual_lcs.c_[0] * dt / 0.1;
 //  VectorXd Dist = system_.E_[0] * scaling * state + system_.c_[0] * scaling + system_.H_[0] * scaling * input + system_.F_[0] * force_checking;
   VectorXd Dist = system_.E_[0] * scaling * state + system_.H_[0] * scaling * input + system_.F_[0] * force_checking;
 
@@ -610,7 +613,7 @@ void C3Controller_franka::StateEstimation(Eigen::VectorXd& q_plant, Eigen::Vecto
     double dist_y = d(gen);
 
 
-    double noise_threshold = 0.005;
+    double noise_threshold = 0.01;
     if (dist_x > noise_threshold) {
       dist_x = noise_threshold;
     } else if (dist_x < -noise_threshold) {
