@@ -244,11 +244,12 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   F = F + Res_F;
   H = H + Res_H;
   c = c + Res_c;
+//  c = c + Res_c +  0.001 * VectorXd::Ones(n_contact);
 
   // MPC horizon
   int N = 5;
 
-  // Scaling factor
+  // Scaling fact
   auto Dn = D.squaredNorm();
   auto An = A.squaredNorm();
   auto AnDn = An / Dn;

@@ -311,12 +311,13 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
   const SceneGraphInspector<double>& inspector = scene_graph_.model_inspector();
 //  ball_urdf_radius = inspector.GetShape(contact_geoms_[1]).Reify(
 //      ShapeReifier.ImplementGeometry(const Sphere&, void*));
-
+  double gap_adding = (residual_lcs.c_[0](0) + residual_lcs.c_[0](1) + residual_lcs.c_[0](2) + residual_lcs.c_[0](3)) / 4;
+    gap_adding = gap_adding * 0.1;
   /// rolling phase
   if ( ts < roll_phase ) {
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7];
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8];
-//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] + 0.004;
+//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] - gap_adding;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")];
   }
   /// upwards phase
@@ -324,21 +325,27 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[0]; //0.55;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[1]; //0.1;
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + table_offset;
-    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + 2 * (ball_radius - 0.0315) + table_offset;
+//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + 2 * (ball_radius - 0.0315) + table_offset - gap_adding;
+      traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + 2 * (ball_radius - 0.0315) + table_offset;
+
   }
   /// side ways phase
   else if( ts < roll_phase + 2 * return_phase / 3 ) {
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7] - back_dist*error_hat(0);
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8] - back_dist*error_hat(1);
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + table_offset;
+//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + 2 * (ball_radius - 0.0315) + table_offset - gap_adding;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + 2 * (ball_radius - 0.0315) + table_offset;
+
   }
   /// position finger phase
   else{
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7] - back_dist*error_hat(0);
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8] - back_dist*error_hat(1);
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + table_offset;
+//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + 2 * (ball_radius - 0.0315) + table_offset - gap_adding;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + 2 * (ball_radius - 0.0315) + table_offset;
+
   }
   std::vector<VectorXd> traj_desired(Q_.size() , traj_desired_vector);
 
@@ -518,8 +525,8 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
                                                  &force);
   (void)flag; // suppress compiler unused variable warning
 
-//  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.D_[0] * force / scaling2 + system2_.d_[0];
-  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.d_[0];
+  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.D_[0] * force / scaling2 + system2_.d_[0];
+//  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.d_[0];
   VectorXd direction = (state_next - state); // no need to do normalization
   state_next = state + direction / 0.1 * dt;
 
@@ -559,7 +566,8 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
 
   double Resc_avg = (residual_lcs.c_[0](0) + residual_lcs.c_[0](1) + residual_lcs.c_[0](2) + residual_lcs.c_[0](3)) / 4;
   double Dist_avg = (Dist(0) + Dist(1) + Dist(2) + Dist(3)) / 4;
-  force_des(1) = Resc_avg;
+  force_des(1) = gap_adding;
+  force_des(2) = Resc_avg - Dist_avg;
 
 //  VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size());
   VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size() + input.size());
