@@ -78,7 +78,7 @@ enable_contact: 1
 ball_stddev: 0.00 # standard deviation of 0-mean noise on ball state estimation
 
 # gaiting parameters
-roll_phase: 1.5  #2.5
+roll_phase: 1  #2.5
 return_phase: 0.4 #0.75
 gait_parameters: [0.022, 0.0921, 0.0881, 0.0701] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
 # gait parameters represent height above the table

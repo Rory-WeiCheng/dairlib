@@ -310,9 +310,12 @@ EventStatus FrankaBallToBallPosition::UpdateBallPosition(
   DRAKE_ASSERT(input != nullptr);
   const auto& franka_output = input->get_value<dairlib::lcmt_robot_output>();
 
+  // 2023.7.18 manually hack the z estimation
+  double radius_difference = param_.ball_model_radius - param_.ball_radius;
+
   Vector3d position(franka_output.position[11],
                     franka_output.position[12],
-                    franka_output.position[13]);
+                    franka_output.position[13] + radius_difference);
 
   if (stddev_ > 1e-12){
     std::random_device rd{};

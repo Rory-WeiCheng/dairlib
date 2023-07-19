@@ -102,7 +102,7 @@ VectorXd C3APPROX::SolveSingleProjection(const MatrixXd& U,
   //prog.AddLinearEqualityConstraint(LinIneq, -c/scaling, {xn, ln, un});
   projprog_.AddLinearConstraint(MatrixXd::Identity(m_, m_), VectorXd::Zero(m_), 10000*VectorXd::Ones(m_), ln_);
 
-  double alpha = 0.7;
+  double alpha = 0.8;
   MatrixXd New_U = U;
   New_U.block(n_,n_,m_,m_) = alpha * F;
 

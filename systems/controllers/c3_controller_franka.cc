@@ -247,7 +247,7 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
   VectorXd q_plant = robot_output->GetPositions();
   VectorXd v_plant = robot_output->GetVelocities();
   Vector3d true_ball_xyz = q_plant.tail(3);    // extract true state for visualization purposes only
-  q_plant.tail(3) << ProjectStateEstimate(end_effector, q_plant.tail(3));
+//  q_plant.tail(3) << ProjectStateEstimate(end_effector, q_plant.tail(3));
   // uncomment this line if using OLD simulation (without state estimator)
   // StateEstimation (q_plant, v_plant, end_effector, timestamp);
 
@@ -529,7 +529,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
 //  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.d_[0];
   VectorXd direction = (state_next - state); // no need to do normalization
   state_next = state + direction / 0.1 * dt;
-
+//  state_next.segment(10,3) = (state_next.segment(0,3) - state.segment(0,3)) / dt;
 //  std::cout<< 1 / 0.1 * dt << std::endl;
 
     /// check contact force
@@ -640,7 +640,8 @@ void C3Controller_franka::StateEstimation(Eigen::VectorXd& q_plant, Eigen::Vecto
     q_plant(q_map_franka_.at("base_y")) = alpha_p*y_obs + (1-alpha_p)*prev_position_(1);
 
     ///project estimate
-    q_plant.tail(7) << 1, 0, 0, 0, ProjectStateEstimate(end_effector, q_plant.tail(3));;
+//    q_plant.tail(7) << 1, 0, 0, 0, ProjectStateEstimate(end_effector, q_plant.tail(3));
+      q_plant.tail(7) << 1, 0, 0, 0, q_plant.tail(3);
   }
   else{
     q_plant.tail(7) << 1, 0, 0, 0, q_plant.tail(3);
