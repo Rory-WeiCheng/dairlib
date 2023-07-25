@@ -513,7 +513,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   /// still use the 0.1s to generate lcs
   auto system_scaling_pair2 = solvers::LCSFactoryFrankaConvex::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
-      num_friction_directions_, mu_, 0.1, residual_lcs);
+      num_friction_directions_, mu_, dt, residual_lcs);
 
   solvers::LCS system2_ = system_scaling_pair2.first;
   double scaling2 = system_scaling_pair2.second;
@@ -521,11 +521,18 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
 //  drake::solvers::MobyLCPSolver<double> LCPSolver;
   VectorXd force;
 
-  auto flag = LCPSolver.SolveLcpLemke(system2_.F_[0], system2_.E_[0] * scaling2 * state + system2_.c_[0] * scaling2 + system2_.H_[0] * scaling2 * input,
+  auto flag = LCPSolver.SolveLcpLemke(system_.F_[0], system_.E_[0] * scaling * state + system_.c_[0] * scaling + system_.H_[0] * scaling * input,
                                                  &force);
   (void)flag; // suppress compiler unused variable warning
 
-  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.D_[0] * force / scaling2 + system2_.d_[0];
+// 2023.7.20 check short time prediction
+  VectorXd force_dt;
+
+  auto flag_dt = LCPSolver.SolveLcpLemke(system2_.F_[0], system2_.E_[0] * scaling2 * state + system2_.c_[0] * scaling2 + system2_.H_[0] * scaling2 * input,
+                                        &force_dt);
+  (void)flag_dt; // suppress compiler unused variable warning
+
+  VectorXd state_next = system_.A_[0] * state + system_.B_[0] * input + system_.D_[0] * force / scaling + system_.d_[0];
 //  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.d_[0];
   VectorXd direction = (state_next - state); // no need to do normalization
   state_next = state + direction / 0.1 * dt;
@@ -559,6 +566,11 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   VectorXd force_des = VectorXd::Zero(6);
 //  force_des << force(0), force(2), force(4), force(5), force(6), force(7);
   force_des(0) = force_checking(0) + force_checking(1) + force_checking(2) + force_checking(3);
+  force_des(1) = force_checking(0);
+  force_des(2) = force_checking(1);
+  force_des(3) = force_checking(2);
+  force_des(4) = force_checking(3);
+  force_des(5) = force_dt(0) + force_dt(1) + force_dt(2) + force_dt(3);
 
 //  residual_lcs.c_[0] = residual_lcs.c_[0] * dt / 0.1;
 //  VectorXd Dist = system_.E_[0] * scaling * state + system_.c_[0] * scaling + system_.H_[0] * scaling * input + system_.F_[0] * force_checking;
@@ -566,8 +578,8 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
 
   double Resc_avg = (residual_lcs.c_[0](0) + residual_lcs.c_[0](1) + residual_lcs.c_[0](2) + residual_lcs.c_[0](3)) / 4;
   double Dist_avg = (Dist(0) + Dist(1) + Dist(2) + Dist(3)) / 4;
-  force_des(1) = gap_adding;
-  force_des(2) = Resc_avg - Dist_avg;
+//  force_des(1) = gap_adding;
+//  force_des(2) = Resc_avg - Dist_avg;
 
 //  VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size());
   VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size() + input.size());

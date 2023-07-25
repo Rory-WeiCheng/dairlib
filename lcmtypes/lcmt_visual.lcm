@@ -18,4 +18,5 @@ struct lcmt_visual
   double total_loss;
   double dyn_loss;
   double lcp_loss;
+  double period_loss;
 }
