@@ -75,29 +75,32 @@ def processing_callback(data, channel):
 def main():
     import lcm
     import sys
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import scipy.io
-
-    # Wei-Cheng: 2023.1.31 modified local path to test the data recording
-    logfile = "/usr/rory-workspace/data/experiment_logs/2023/02_06_23/00/lcmlog-00"
-    # logfile = "/home/alpaydinoglu/workspace/dairlib/example_log"
-
+    # import matplotlib.pyplot as plt
+    # import numpy as np
+    # import scipy.io
+    #
+    # # Wei-Cheng: 2023.1.31 modified local path to test the data recording
+    # logfile = "/usr/rory-workspace/data/experiment_logs/2023/02_06_23/00/lcmlog-00"
+    # # logfile = "/home/alpaydinoglu/workspace/dairlib/example_log"
+    #
+    # log = lcm.EventLog(logfile, "r")
+    # # print_log_summary(logfile, log)
+    # x, y = get_log_data(log, channels, -1, processing_callback, "FRANKA_OUTPUT")
+    # plt.plot(x, y)
+    #
+    # circle2 = plt.Circle((0.55, 0), 0.1, color='b', fill=False)
+    # plt.gca().add_patch(circle2)
+    #
+    # plt.show()
+    #
+    #
+    # print("creating mat file")
+    # mdic = {"x": x, "y": y}
+    # scipy.io.savemat('xy_ball.mat', mdic)
+    # print("finished creating mat file")
+    logfile = sys.argv[1]
     log = lcm.EventLog(logfile, "r")
-    # print_log_summary(logfile, log)
-    x, y = get_log_data(log, channels, -1, processing_callback, "FRANKA_OUTPUT")
-    plt.plot(x, y)
-
-    circle2 = plt.Circle((0.55, 0), 0.1, color='b', fill=False)
-    plt.gca().add_patch(circle2)
-
-    plt.show()
-
-
-    print("creating mat file")
-    mdic = {"x": x, "y": y}
-    scipy.io.savemat('xy_ball.mat', mdic)
-    print("finished creating mat file")
+    print_log_summary(logfile, log)
 
 
 if __name__ == "__main__":

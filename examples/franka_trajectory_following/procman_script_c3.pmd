@@ -98,14 +98,6 @@ group "7.[SIM] C3" {
         exec = "bazel-bin/examples/franka_trajectory_following/lcm_call_adaptive";
         host = "localhost";
     }
-    cmd "h.[HELPER] adaptive module (all zero)" {
-        exec = "bazel-bin/examples/franka_trajectory_following/lcm_adaptive_test --TTL 0";
-        host = "localhost";
-    }
-    cmd "i.[TESTING] position control" {
-        exec = "bazel-bin/examples/franka_trajectory_following/run_c3_position_experiment";
-        host = "localhost";
-    }
 }
 
 group "8.Logging, Utils" {
@@ -118,7 +110,7 @@ group "8.Logging, Utils" {
         host = "localhost";
     }
     cmd "c.process_logs" {
-        exec = "bazel-bin/bindings/pydairlib/analysis/process_lcm_log_test";
+        exec = "bazel-bin/bindings/pydairlib/analysis/log_plotter_franka";
         host = "localhost";
     }
     cmd "d.process_frames" {

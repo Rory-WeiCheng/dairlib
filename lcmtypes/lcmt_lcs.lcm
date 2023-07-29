@@ -3,6 +3,7 @@ package dairlib;
 */
 struct lcmt_lcs
 {
+  int64_t utime;
   int16_t num_state;
   int16_t num_velocity;
   int16_t num_control;

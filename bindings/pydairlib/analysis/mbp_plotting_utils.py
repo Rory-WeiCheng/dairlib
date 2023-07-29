@@ -170,7 +170,92 @@ def process_c3_channel(data):
   return {'t': np.array(t), 'x_d': np.array(x_d), 
           'xdot_d': np.array(xdot_d), 'f_d': np.array(f_d),
           'solve_times': np.array(solve_times).reshape(-1, 1)}
-    
+
+# 2023.7.28 newly added for adaptive learning new lcm message visualization
+def process_dataset_channel(data):
+    t = []
+    state = []
+    input = []
+    state_pred = []
+
+    A_M = []
+    B_M = []
+    D_M = []
+    d_M = []
+
+    E_M = []
+    F_M = []
+    H_M = []
+    c_M = []
+
+    for msg in data:
+        # get the state from learning dataset
+        t.append(msg.utime / 1e6)
+
+        state.append(msg.state)
+        input.append(msg.input)
+        state_pred.append(msg.state_pred) # only velocity part
+
+        A_M.append(msg.A)
+        B_M.append(msg.B)
+        D_M.append(msg.D)
+        d_M.append(msg.d)
+
+        E_M.append(msg.E)
+        F_M.append(msg.F)
+        H_M.append(msg.H)
+        c_M.append(msg.c)
+
+    # not extracting orientation and angular velocity
+    return {'t': np.array(t), 'ee_pos': np.array(state)[:,0:3], 'ee_vel': np.array(state)[:,10:13], 'ball_pos': np.array(state)[:,7:10],
+            'ball_vel': np.array(state)[:,16:19], 'input': np.array(input),'ee_vel_pred': np.array(state_pred)[:,0:3],'ball_vel_pred': np.array(state_pred)[:,6:9],
+            'A_M': np.array(A_M), 'B_M': np.array(B_M), 'D_M': np.array(D_M), 'd_M': np.array(d_M),
+            'E_M': np.array(E_M), 'F_M': np.array(F_M), 'H_M': np.array(H_M), 'c_M': np.array(c_M)
+            }
+def process_residual_channel(data):
+    t = []
+    d_res = []
+    c_res = []
+
+    for msg in data:
+        # get the state from residual dataset
+        t.append(msg.utime / 1e6) # this time is the time for the initial data of the batch data
+
+        d_res.append(msg.d)
+        c_res.append(msg.c)
+
+    return {'t': np.array(t), 'd_res': np.array(d_res)[:,6:9], 'c_res': np.array(c_res), 'c_res_eeb': np.array(c_res)[:,0:4], 'c_res_bg': np.array(c_res)[:,4:8]}
+
+def process_learning_visual_channel(data):
+    t = []
+    total_loss = []
+    dyn_loss = []
+    lcp_loss = []
+    c_grad = []
+    d_grad = []
+    lambda_n = []
+    lambda_all = []
+    residual = []
+
+    for msg in data:
+        # get the state from residual dataset
+        t.append(msg.utime / 1e6) # this time is the time for the initial data of the batch data
+
+        total_loss.append(msg.total_loss)
+        dyn_loss.append(msg.dyn_loss)
+        lcp_loss.append(msg.lcp_loss)
+        c_grad.append(msg.c_grad)
+        d_grad.append(msg.d_grad)
+        lambda_n.append(msg.lambda_n)
+        lambda_all.append(msg.lambda_check)
+        residual.append(msg.res_check)
+
+    return {'t': np.array(t), 'total_loss': np.array(total_loss), 'dyn_loss': np.array(dyn_loss), 'lcp_loss': np.array(lcp_loss),
+            'loss_stack': np.column_stack((np.array(total_loss),np.array(dyn_loss),np.array(lcp_loss))),
+            'c_grad': np.array(c_grad),'d_grad': np.array(d_grad), 'lambda_n': np.array(lambda_n), 'lambda_all': np.array(lambda_all),
+            'c_grad_eeb':np.array(c_grad)[:,0:4], 'c_grad_bg':np.array(c_grad)[:,4:8], 'lambda_n_eeb': np.array(lambda_n)[:,0].reshape(-1, 1),
+            'lambda_eeb': np.array(lambda_all)[:,0:4], 'residual': np.array(residual)[:,-3:]
+            }
 
 
 def make_point_positions_from_q(
@@ -304,6 +389,34 @@ def load_default_franka_channels(data, plant, state_channel, input_channel, c3_c
     vision = process_ball_position_channel(data[vision_channel])
 
     return robot_output, robot_input, c3_output, cam0, cam1, cam2, vision
+
+def load_default_franka_channels_reduction(data, plant, state_channel, input_channel, c3_channel):
+
+    print("\nDetected the following channels:")
+    print(data.keys())
+    print('')
+
+    robot_output = process_state_channel(data[state_channel], plant)
+    robot_input = process_effort_channel(data[input_channel], plant)
+    c3_output = process_c3_channel(data[c3_channel])
+
+    return robot_output, robot_input, c3_output
+
+def load_default_franka_channels_adaptive_learning(data, plant, state_channel, input_channel, c3_channel,\
+                                                   dataset_channel, residual_channel, learning_visual):
+
+    print("\nDetected the following channels:")
+    print(data.keys())
+    print('')
+
+    robot_output = process_state_channel(data[state_channel], plant)
+    robot_input = process_effort_channel(data[input_channel], plant)
+    c3_output = process_c3_channel(data[c3_channel])
+    learning_dataset = process_dataset_channel(data[dataset_channel])
+    residual_lcs = process_residual_channel(data[residual_channel])
+    learning_visual = process_learning_visual_channel(data[learning_visual])
+
+    return robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual
 
 def load_franka_state_estimate_channel(data, plant, state_channel):
     return process_state_channel(data[state_channel], plant)
@@ -501,7 +614,154 @@ def plot_measured_efforts_by_name(robot_output, u_names, time_slice, u_map, titl
     return plot_q_or_v_or_u(robot_output, 'u', u_names, u_slice, time_slice,
                             ylabel='Efforts (Nm)', title=title)
 
+############################ newly added for data set and learning plots ####################################
+def plot_learning_dataset(learning_dataset, key, time_slice, ylabel=None, title = None):
+    titles = {'ee_pos': 'Learning Data Set: End-Effector Position',
+              'ee_vel': 'Learning Data Set: End-Effector Velocity',
+              'ball_pos': 'Learning Data Set: Ball Position',
+              'ball_vel': 'Learning Data Set: End-Effector Position',
+              'input': 'Learning Data Set: C3 Input',
+              'ee_pos_pred': 'Learning Data Set: End-Effector Position Prediction',
+              'ee_vel_pred': 'Learning Data Set: End-Effector Velocity Prediction',
+              'ball_pos_pred': 'Learning Data Set: Ball Position Prediction',
+              'ball_vel_pred': 'Learning Data Set: End-Effector Velocity Prediction',
+              }
+    ylabels = {'ee_pos': 'Position [m]',
+              'ee_vel': 'Velocity [m/s]',
+              'ball_pos': 'Position [m]',
+              'ball_vel': 'Velocity [m/s]',
+              'input': 'Force [N]',
+              'ee_pos_pred': 'Position [m]',
+              'ee_vel_pred': 'Velocity [m/s]',
+              'ball_pos_pred': 'Position [m]',
+              'ball_vel_pred': 'Velocity [m/s]',
+              }
+    if title is None:
+        title = titles[key]
+    if ylabel is None:
+        ylabel = ylabels[key]
 
+    if key == 'ee_pos' or key == 'ball_pos' or key == 'ee_pos_pred' or key == 'ball_pos_pred':
+        legend = ['x', 'y', 'z']
+    elif key == 'ee_vel' or key == 'ball_vel' or key == 'ee_vel_pred' or key == 'ball_vel_pred':
+        legend = ['xdot', 'ydot', 'zdot']
+    elif key == 'input':
+        legend = ['Fx', 'Fy', 'Fz']
+    else:
+        raise Exception("Please assign the correct key value")
+
+    ps = plot_styler.PlotStyler()
+    plotting_utils.make_plot(
+        learning_dataset,
+        't',
+        time_slice,
+        [key],
+        {key: slice(len(legend))},
+        {key: legend},
+        {'xlabel': 'Time',
+         'ylabel': ylabel,
+         'title': title},
+        ps)
+
+    return ps
+
+def plot_residual_lcs(residual_lcs, key, time_slice, ylabel=None, title = None):
+    titles = {'c_res': 'LCP Offset Residual',
+              'd_res': 'Dynamic Offset Residual',
+              'c_res_eeb': 'LCP Offset Residual (EE and ball)',
+              'c_res_bg': 'LCP Offset Residual (ball and ground)',
+              }
+    ylabels = {'c_res': 'c_res',
+               'd_res': 'd_res',
+               'c_res_eeb': 'c_res_eeb',
+               'c_res_bg': 'c_res_bg',
+               }
+    if title is None:
+        title = titles[key]
+    if ylabel is None:
+        ylabel = ylabels[key]
+
+    if key == 'c_res':
+        legend = ['c0', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7']
+    elif key == 'd_res':
+        legend = ['d6', 'd7', 'd8']
+    elif key == 'c_res_eeb':
+        legend = ['c0', 'c1', 'c2', 'c3']
+    elif key == 'c_res_bg':
+        legend = ['c4', 'c5', 'c6', 'c7']
+    else:
+        raise Exception("Please assign the correct key value")
+
+    ps = plot_styler.PlotStyler()
+    plotting_utils.make_plot(
+        residual_lcs,
+        't',
+        time_slice,
+        [key],
+        {key: slice(len(legend))},
+        {key: legend},
+        {'xlabel': 'Time',
+         'ylabel': ylabel,
+         'title': title},
+        ps)
+
+    return ps
+
+def plot_learning_visual(learning_visual, key, time_slice, ylabel=None, title = None):
+    titles = {'c_grad_eeb': 'LCP Offset Gradient (EE and ball)',
+              'c_grad_bg': 'LCP Offset Gradient (ball and ground)',
+              'd_grad': 'Dynamic Offset Gradient',
+              'loss_stack': 'Learning loss',
+              'lambda_n_eeb': 'normal contact (EE and ball)',
+              'lambda_eeb': 'contact forces (EE and ball)',
+              'residual': 'Ball Velocity Residual'
+              }
+    ylabels = {'c_grad_eeb': 'c_grad_eeb',
+               'c_grad_bg': 'c_grad_bg',
+               'd_grad': 'd_grad',
+               'loss_stack': 'loss',
+               'lambda_n_eeb': 'normal contact (EE and ball) (N)',
+               'lambda_eeb': 'contact forces (EE and ball) (N)',
+               'residual': 'Ball Velocity Residual (m/s)'
+               }
+    if title is None:
+        title = titles[key]
+    if ylabel is None:
+        ylabel = ylabels[key]
+
+    if key == 'c_grad_eeb':
+        legend = ['c_grad_0', 'c_grad_1', 'c_grad_2', 'c_grad_3']
+    elif key == 'c_grad_bg':
+        legend = ['c_grad_4', 'c_grad_5', 'c_grad_6', 'c_grad_7']
+    elif key == 'd_grad':
+        legend = ['d_grad_6', 'd_grad_7', 'd_grad_8']
+    elif key == 'loss_stack':
+        legend = ['total_loss', 'dyn_loss', 'lcp_loss']
+    elif key == 'lambda_n_eeb':
+        legend = ['lambda_n_eeb']
+    elif key == 'lambda_eeb':
+        legend = ['lambda_eeb_0', 'lambda_eeb_1', 'lambda_eeb_2', 'lambda_eeb_3']
+    elif key == 'residual':
+        legend = ['v_res_x', 'v_res_y', 'v_res_z']
+    else:
+        raise Exception("Please assign the correct key value")
+
+    ps = plot_styler.PlotStyler()
+    plotting_utils.make_plot(
+        learning_visual,
+        't',
+        time_slice,
+        [key],
+        {key: slice(len(legend))},
+        {key: legend},
+        {'xlabel': 'Time',
+         'ylabel': ylabel,
+         'title': title},
+        ps)
+
+    return ps
+
+############################ newly added for data set and learning plots ####################################
 def plot_points_positions(robot_output, time_slice, plant, context, frame_names,
                           pts, dims):
 

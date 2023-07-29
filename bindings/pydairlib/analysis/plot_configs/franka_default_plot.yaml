@@ -13,10 +13,11 @@ plot_measured_joint_efforts: true
 plot_desired_joint_efforts: true
 
 # Desired ball/vision plots
-plot_unfiltered_ball_position: true
-plot_vision_dt: true
-plot_num_cameras: true
-plot_camera_channels: ['CAM0_OUTPUT', 'CAM1_OUTPUT', 'CAM2_OUTPUT', 'VISION_OUTPUT']
+plot_unfiltered_ball_position: false
+plot_vision_dt: false
+plot_num_cameras: false
+#plot_camera_channels: ['CAM0_OUTPUT', 'CAM1_OUTPUT', 'CAM2_OUTPUT', 'VISION_OUTPUT']
+plot_camera_channels: []
 
 # Desired C3 plots
 plot_EE_position: true
@@ -26,3 +27,28 @@ plot_desired_EE_position: true
 plot_desired_EE_velocity: true
 plot_desired_EE_forces: true
 plot_c3_solve_times: true
+
+# newly added for Adaptive Learning Framework
+# for data generator, do not plot LCS matrices
+plot_dataset_ee_pos: true
+plot_dataset_ee_vel: true
+plot_dataset_ball_pos: true
+plot_dataset_ball_vel: true
+plot_dataset_input: true
+plot_dataset_ee_vel_pred: true
+plot_dataset_ball_vel_pred: true
+
+# for the sent residual lcs, currently only plot the learnt c and d turn
+plot_c_res: true
+plot_d_res: true
+plot_c_res_eeb: true
+plot_c_res_bg: true
+
+# for the learning details, mainly plot losses, residual and eeb contact
+plot_c_grad_eeb: true
+plot_c_grad_bg: true
+plot_d_grad: true
+plot_loss: true
+plot_lambda_n_eeb: true
+plot_lambda_eeb: true
+plot_residual: true

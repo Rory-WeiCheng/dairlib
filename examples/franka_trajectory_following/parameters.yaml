@@ -24,7 +24,7 @@ Q_ball_x: 1000000 # 10000
 Q_ball_y: 1000000 # 10000
 Q_finger_vel: 10        # 10 translational velocity cost
 Q_ball_vel: 0.1         # 0.1 angular & translational velocity cost
-Qnew_finger: 1000000    # 1000000  Qnew costs
+Qnew_finger: 1000    # 1000000  Qnew costs
 Qnew_ball_x: 1
 Qnew_ball_y: 1
 R: 0.01                 # torque cost in xyz
@@ -78,8 +78,8 @@ enable_contact: 1
 ball_stddev: 0.00 # standard deviation of 0-mean noise on ball state estimation
 
 # gaiting parameters
-roll_phase: 1  #2.5
-return_phase: 0.4 #0.75
+roll_phase: 1.5  #2.5
+return_phase: 0.8 #0.75
 gait_parameters: [0.022, 0.0921, 0.0881, 0.0701] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
 # gait parameters represent height above the table
 

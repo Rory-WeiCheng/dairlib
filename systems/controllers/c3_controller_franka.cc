@@ -319,6 +319,7 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8];
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] - gap_adding;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")];
+//    std::cout<< "rolling phase" << std::endl;
   }
   /// upwards phase
   else if (ts < roll_phase + return_phase / 3){
@@ -327,7 +328,7 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + table_offset;
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + 2 * (ball_radius - 0.0315) + table_offset - gap_adding;
       traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + 2 * (ball_radius - 0.0315) + table_offset;
-
+//      std::cout<< "upwards phase" << std::endl;
   }
   /// side ways phase
   else if( ts < roll_phase + 2 * return_phase / 3 ) {
@@ -336,7 +337,7 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + table_offset;
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + 2 * (ball_radius - 0.0315) + table_offset - gap_adding;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + 2 * (ball_radius - 0.0315) + table_offset;
-
+//      std::cout<< "side ways phase" << std::endl;
   }
   /// position finger phase
   else{
@@ -345,7 +346,7 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + table_offset;
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + 2 * (ball_radius - 0.0315) + table_offset - gap_adding;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + 2 * (ball_radius - 0.0315) + table_offset;
-
+//      std::cout<< "position finger phase" << std::endl;
   }
   std::vector<VectorXd> traj_desired(Q_.size() , traj_desired_vector);
 
@@ -422,6 +423,10 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   contact_pairs.push_back(SortedPair(contact_geoms_[0], contact_geoms_[1]));
   contact_pairs.push_back(SortedPair(contact_geoms_[1], contact_geoms_[2]));
 
+
+  // 2023.7.25 test to learn only phi using small dt
+//  residual_lcs.c_[0] = residual_lcs.c_[0] * 0.01 / 0.1;
+//  residual_lcs.d_[0] = residual_lcs.d_[0] * 0.01 / 0.1;
   auto system_scaling_pair = solvers::LCSFactoryFrankaConvex::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
       num_friction_directions_, mu_, 0.1, residual_lcs);
@@ -468,6 +473,8 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   MatrixXd Qnew;
   Qnew = Q_[0];
 
+  MatrixXd Rnew;
+  Rnew = R_[0];
   if (ts > roll_phase){
     double Qnew_finger = param_.Qnew_finger;
     Qnew(0,0) = Qnew_finger;
@@ -475,11 +482,13 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
     Qnew(2,2) = Qnew_finger;
     Qnew(7,7) = param_.Qnew_ball_x;
     Qnew(8,8) = param_.Qnew_ball_y;
+//    Rnew = 1 * MatrixXd::Identity(3,3);
   }
 
   std::vector<MatrixXd> Qha(Q_.size(), Qnew);
+  std::vector<MatrixXd> Rha(R_.size(), Rnew);
 
-  solvers::C3MIQP opt(system_, Qha, R_, G_, U_, traj_desired, options,
+  solvers::C3MIQP opt(system_, Qha, Rha, G_, U_, traj_desired, options,
     warm_start_delta_, warm_start_binary_, warm_start_x_,
     warm_start_lambda_, warm_start_u_, true);
 
@@ -510,7 +519,9 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
                                         &force_checking);
   (void)flag_checking; // suppress compiler unused variable warning
 
-  /// still use the 0.1s to generate lcs
+  /// still use the 0.1s to generate lcs. i.e. no system_scaling2, currently still keep it to see short term prediction
+//  residual_lcs.c_[0] = residual_lcs.c_[0] * 0.1 / dt;
+//  residual_lcs.d_[0] = residual_lcs.d_[0] * 0.1 / dt;
   auto system_scaling_pair2 = solvers::LCSFactoryFrankaConvex::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
       num_friction_directions_, mu_, dt, residual_lcs);

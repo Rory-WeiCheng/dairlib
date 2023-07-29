@@ -3,6 +3,7 @@ package dairlib;
 */
 struct lcmt_visual
 {
+  int64_t utime;
   int16_t num_velocity;
   int16_t num_lambda;
 
@@ -19,4 +20,6 @@ struct lcmt_visual
   double dyn_loss;
   double lcp_loss;
   double period_loss;
+  double period_dyn_loss;
+  double period_lcp_loss;
 }

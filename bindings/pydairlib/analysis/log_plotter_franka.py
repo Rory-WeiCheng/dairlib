@@ -14,7 +14,7 @@ from pydairlib.common import plot_styler, plotting_utils
 from pydrake.all import *
 import pydairlib.common
 import yaml
-from examples.franka_trajectory_following.scripts.franka_logging_utils import get_most_recent_logs
+from examples.franka_trajectory_following.scripts.franka_logging_utils_test import get_most_recent_logs
 from matplotlib.patches import Rectangle
 
 import scipy.io
@@ -124,7 +124,7 @@ def plot_EE_velocity_error(t, q, v, xdot_d, plant, context, frame, pt_on_frame, 
 
 
 def main():
-    ''' Read config '''
+    ''' Read plot config '''
     config_path = 'bindings/pydairlib/analysis/plot_configs/franka_default_plot.yaml'
     with open(config_path, 'r') as stream:
       config = yaml.safe_load(stream)
@@ -159,7 +159,10 @@ def main():
        'VISION_OUTPUT': dairlib.lcmt_ball_position,
        'CAM0_OUTPUT': dairlib.lcmt_ball_position,
        'CAM1_OUTPUT': dairlib.lcmt_ball_position,
-       'CAM2_OUTPUT': dairlib.lcmt_ball_position} 
+       'CAM2_OUTPUT': dairlib.lcmt_ball_position,
+       'LEARNING_DATASET': dairlib.lcmt_learning_data,
+       'RESIDUAL_LCS':dairlib.lcmt_lcs,
+       'DATA_CHECKING':dairlib.lcmt_visual}
     
     ''' set up log directory paths '''
     if len(sys.argv) == 1:
@@ -179,16 +182,26 @@ def main():
     print("Processing {}".format(filename))
     log = lcm.EventLog(filename, "r")
 
-    robot_output, robot_input, c3_output, \
-    cam0_output, cam1_output, cam2_output, vision_output = \
-        get_log_data(log,                                       # log
-                     franka_channels,                           # lcm channels
-                     config['end_time'],                        # end time
-                     mbp_plots.load_default_franka_channels,    # processing callback
-                     plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT_WO_G",
-                     "CONTROLLER_INPUT", "CAM0_OUTPUT", "CAM1_OUTPUT",
-                     "CAM2_OUTPUT", "VISION_OUTPUT")   
-                     
+    # change "FRANKA_INPUT_WO_G" to "FRANKA_INPUT" if running pure sim on single PC
+    # robot_output, robot_input, c3_output, \
+    # cam0_output, cam1_output, cam2_output, vision_output = \
+    #     get_log_data(log,                                       # log
+    #                  franka_channels,                           # lcm channels
+    #                  config['end_time'],                        # end time
+    #                  mbp_plots.load_default_franka_channels,    # processing callback
+    #                  plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT_WO_G",
+    #                  "CONTROLLER_INPUT", "CAM0_OUTPUT", "CAM1_OUTPUT",
+    #                  "CAM2_OUTPUT", "VISION_OUTPUT")
+
+    # test old logging script locally
+    robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual = \
+    get_log_data(log,                                                       # log
+                     franka_channels,                                       # lcm channels
+                     config['end_time'],                                    # end time
+                     mbp_plots.load_default_franka_channels_adaptive_learning,    # processing callback
+                     plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT",
+                     "CONTROLLER_INPUT", "LEARNING_DATASET", "RESIDUAL_LCS", "DATA_CHECKING")
+
     print('Finished processing log - making plots')
 
     if not os.path.isdir('{}/{}/figures'.format(logdir, log_num)):
@@ -198,45 +211,46 @@ def main():
     # Define x time slice
     t_x_slice = slice(robot_output['t_x'].size)
 
-    # ''' Plot Circle '''
-    # if config['plot_ball_position']:
-    #     ball_pos_names = ['base_x', 'base_y']
-    #     qs = [pos_map[name] for name in ball_pos_names]
-    #     qhold = robot_output['q']
-    #
-    #
-    #     tsize = robot_output['t_x'].size
-    #     circle2 = plt.Circle((0.55, 0), 0.1, color='b', fill=False)
-    #
-    #     xxx = qhold[:,qs[0]]
-    #     yyy = qhold[:,qs[1]]
-    #     plt.plot(xxx,yyy)
-    #     plt.xlim([0.4, 0.7])
-    #     plt.ylim([-0.15, 0.15])
-    #     plt.gca().add_patch(circle2)
-    #
-    #     plt.show()
-
-    ''' Plot Rectangle '''
+    ''' Plot Circle '''
     if config['plot_ball_position']:
         ball_pos_names = ['base_x', 'base_y']
         qs = [pos_map[name] for name in ball_pos_names]
         qhold = robot_output['q']
 
+
         tsize = robot_output['t_x'].size
         circle2 = plt.Circle((0.55, 0), 0.1, color='b', fill=False)
-        plt.gca().add_patch(circle2)
 
         xxx = qhold[:,qs[0]]
         yyy = qhold[:,qs[1]]
         plt.plot(xxx,yyy)
-
-        #plt.xlim([0.3, 0.9])
-        #plt.ylim([-0.12, 0.12])
-        #rect = Rectangle((0.55,-0.1),0.1,0.2,0.0,  color='b', fill = False)
-        #plt.gca().add_patch(rect)
+        plt.xlim([0.4, 0.7])
+        plt.ylim([-0.15, 0.15])
+        plt.gca().add_patch(circle2)
+        plt.axis('equal')
 
         plt.show()
+
+    # ''' Plot Rectangle '''
+    # if config['plot_ball_position']:
+    #     ball_pos_names = ['base_x', 'base_y']
+    #     qs = [pos_map[name] for name in ball_pos_names]
+    #     qhold = robot_output['q']
+    #
+    #     tsize = robot_output['t_x'].size
+    #     circle2 = plt.Circle((0.55, 0), 0.1, color='b', fill=False)
+    #     plt.gca().add_patch(circle2)
+    #
+    #     xxx = qhold[:,qs[0]]
+    #     yyy = qhold[:,qs[1]]
+    #     plt.plot(xxx,yyy)
+    #
+    #     #plt.xlim([0.3, 0.9])
+    #     #plt.ylim([-0.12, 0.12])
+    #     #rect = Rectangle((0.55,-0.1),0.1,0.2,0.0,  color='b', fill = False)
+    #     #plt.gca().add_patch(rect)
+    #
+    #     plt.show()
 
     print("creating mat file")
     mdic = {"x": xxx, "y": yyy}
@@ -352,7 +366,7 @@ def main():
         save_flag = config['save_plots'])
     
     ''' Plot C3 solve times '''
-    if config['plot_desired_EE_forces']:
+    if config['plot_c3_solve_times']:
       solve_times_ps = mbp_plots.plot_c3_plan(
         c3_output, 'solve_times', t_c3_slice)
       check_flag_and_save(solve_times_ps,
@@ -364,8 +378,8 @@ def main():
     #qhold = c3_output['solve_times']
     #print(qhold)
 
-    print(np.size( c3_output['solve_times']))
-    print(np.size( c3_output['t'] ))
+    # print(np.size( c3_output['solve_times']))
+    # print(np.size( c3_output['t'] ))
 
     ttt = c3_output['t']
     sss = c3_output['solve_times']
@@ -442,6 +456,114 @@ def main():
       check_flag_and_save(camera_channels_ps,
         "{}/{}/figures/camera_channels{}.svg".format(logdir, log_num, log_num),
         save_flag = config['save_plots'])
+
+    ## 2023.7.28 newly added, plot learning dataset and residual
+    ''' Plot learning dataset state'''
+    t_dataset_slice = slice(learning_dataset['t'].size)
+    if config['plot_dataset_ee_pos']:
+        data_set_ee_pos_ps = mbp_plots.plot_learning_dataset(learning_dataset, 'ee_pos', t_dataset_slice)
+        check_flag_and_save(data_set_ee_pos_ps,
+                            "{}/{}/figures/data_set_ee_pos{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+
+    if config['plot_dataset_ball_pos']:
+        data_set_ball_pos_ps = mbp_plots.plot_learning_dataset(learning_dataset, 'ball_pos', t_dataset_slice)
+        check_flag_and_save(data_set_ball_pos_ps,
+                            "{}/{}/figures/data_set_ball_pos{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+
+    if config['plot_dataset_ee_vel']:
+        data_set_ee_vel_ps = mbp_plots.plot_learning_dataset(learning_dataset, 'ee_vel', t_dataset_slice)
+        check_flag_and_save(data_set_ee_vel_ps,
+                            "{}/{}/figures/data_set_ee_vel{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+
+    if config['plot_dataset_ball_vel']:
+        data_set_ball_vel_ps = mbp_plots.plot_learning_dataset(learning_dataset, 'ball_vel', t_dataset_slice)
+        check_flag_and_save(data_set_ball_vel_ps,
+                            "{}/{}/figures/data_set_ball_vel{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+
+    if config['plot_dataset_input']:
+        data_set_input_ps = mbp_plots.plot_learning_dataset(learning_dataset, 'input', t_dataset_slice)
+        check_flag_and_save(data_set_input_ps,
+                            "{}/{}/figures/data_set_input{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+
+    if config['plot_dataset_ee_vel_pred']:
+        data_set_ee_vel_pred_ps = mbp_plots.plot_learning_dataset(learning_dataset, 'ee_vel_pred', t_dataset_slice)
+        check_flag_and_save(data_set_ee_vel_pred_ps,
+                            "{}/{}/figures/data_set_ee_vel_pred{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+
+    if config['plot_dataset_ball_vel_pred']:
+        data_set_ball_vel_pred_ps = mbp_plots.plot_learning_dataset(learning_dataset, 'ball_vel_pred', t_dataset_slice)
+        check_flag_and_save(data_set_ball_vel_pred_ps,
+                            "{}/{}/figures/data_set_ball_vel_pred{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+
+    ''' Plot Learned Residual (only c and d currently)'''
+    t_res_slice = slice(residual_lcs['t'].size)
+    if config['plot_c_res']:
+        c_res_ps = mbp_plots.plot_residual_lcs(residual_lcs, 'c_res', t_res_slice)
+        check_flag_and_save(c_res_ps,
+                        "{}/{}/figures/c_res{}.svg".format(logdir, log_num, log_num),
+                        save_flag = config['save_plots'])
+    if config['plot_d_res']:
+        d_res_ps = mbp_plots.plot_residual_lcs(residual_lcs, 'd_res', t_res_slice)
+        check_flag_and_save(d_res_ps,
+                            "{}/{}/figures/d_res{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+    if config['plot_c_res_eeb']:
+        c_res_eeb_ps = mbp_plots.plot_residual_lcs(residual_lcs, 'c_res_eeb', t_res_slice)
+        check_flag_and_save(c_res_eeb_ps,
+                            "{}/{}/figures/c_res_eeb{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+    if config['plot_c_res_bg']:
+        c_res_bg_ps = mbp_plots.plot_residual_lcs(residual_lcs, 'c_res_bg', t_res_slice)
+        check_flag_and_save(c_res_bg_ps,
+                            "{}/{}/figures/c_res_bg{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+    ''' Plot Learning Details '''
+    t_learning_visual_slice = slice(learning_visual['t'].size)
+    if config['plot_c_grad_eeb']:
+        c_grad_eeb_ps = mbp_plots.plot_learning_visual(learning_visual, 'c_grad_eeb', t_learning_visual_slice)
+        check_flag_and_save(c_grad_eeb_ps,
+                            "{}/{}/figures/c_grad_eeb{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+    if config['plot_c_grad_bg']:
+        c_grad_bg_ps = mbp_plots.plot_learning_visual(learning_visual, 'c_grad_bg', t_learning_visual_slice)
+        check_flag_and_save(c_grad_bg_ps,
+                            "{}/{}/figures/c_grad_bg{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+    if config['plot_d_grad']:
+        d_grad_ps = mbp_plots.plot_learning_visual(learning_visual, 'd_grad', t_learning_visual_slice)
+        check_flag_and_save(d_grad_ps,
+                            "{}/{}/figures/d_grad{}.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+    if config['plot_loss']:
+        loss_ps = mbp_plots.plot_learning_visual(learning_visual, 'loss_stack', t_learning_visual_slice)
+        check_flag_and_save(loss_ps,
+                            "{}/{}/figures/loss.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+    if config['plot_lambda_n_eeb']:
+        lambda_n_eeb_ps = mbp_plots.plot_learning_visual(learning_visual, 'lambda_n_eeb', t_learning_visual_slice)
+        check_flag_and_save(lambda_n_eeb_ps,
+                            "{}/{}/figures/lambda_n_eeb.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+    if config['plot_lambda_eeb']:
+        lambda_eeb_ps = mbp_plots.plot_learning_visual(learning_visual, 'lambda_eeb', t_learning_visual_slice)
+        check_flag_and_save(lambda_eeb_ps,
+                            "{}/{}/figures/lambda_eeb.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+    if config['plot_residual']:
+        residual_ps = mbp_plots.plot_learning_visual(learning_visual, 'residual', t_learning_visual_slice)
+        check_flag_and_save(residual_ps,
+                            "{}/{}/figures/residual.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
+
+
+
 
     if config['show_plots']:
       print("Finished making plots. Showing plots now.")
