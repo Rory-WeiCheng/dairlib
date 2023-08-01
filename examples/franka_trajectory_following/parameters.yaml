@@ -19,14 +19,14 @@ pushing_offset: 0 #-0.001
 # c3 parameters
 mu: 1                  # changes need to be consistent with urdf
 Q_default: 0
-Q_finger: 500   # 500      # finger xyz cost
-Q_ball_x: 1000000 # 10000
-Q_ball_y: 1000000 # 10000
+Q_finger: 500   # 500      # finger xyz cost           # APPROX： 500
+Q_ball_x: 1000000 # 10000                              # APPROX： 1000000
+Q_ball_y: 1000000 # 10000                              # APPROX： 1000000
 Q_finger_vel: 10        # 10 translational velocity cost
 Q_ball_vel: 0.1         # 0.1 angular & translational velocity cost
-Qnew_finger: 1000    # 1000000  Qnew costs
-Qnew_ball_x: 1
-Qnew_ball_y: 1
+Qnew_finger: 1000    # 1000000  Qnew costs             # APPROX： 500
+Qnew_ball_x: 1                                         # APPROX： 1
+Qnew_ball_y: 1                                         # APPROX： 1
 R: 0.01                 # torque cost in xyz
 G: 0.01                 # 0.01
 U_default: 1
@@ -43,16 +43,16 @@ axis_option: 1
 q_init_franka: [0, 0.275, 0, -2.222, 0, 2.497, 0]
 q_init_ball: [1, 0, 0, 0] # xyz computed according to x_c, y_c, traj_radius, phase, and ball_radius
 initial_start: [0.55, 0, 0.12]
-initial_finish: [0, 0, 0.07]  # [0, 0, 0.07]  # xy computed according to x_c, y_c, traj_radius, and phase
+initial_finish: [0, 0, 0.09]  # [0, 0, 0.07]  # xy computed according to x_c, y_c, traj_radius, and phase
 stabilize_time1: 0.5 #0.5
 move_time: 0.75 #0.75
 stabilize_time2: 0.75 #0.75
 sim_dt: 0.0001
-realtime_rate: 0.5
+realtime_rate: 1
 
 # trajectory parameters
 traj_radius: 0.1 # 0.1
-phase: 0
+phase: 180
 x_c: 0.55
 y_c: 0
 degree_increment: 20
@@ -60,7 +60,7 @@ time_increment: 1
 hold_order: 0 # 0 for zero order hold, 1 for first order hold
 
 # if enable_adaptive_path is set to 1, the trajectory above is not used
-lead_angle: 20 # angle in degrees
+lead_angle: -20 # angle in degrees
 enable_adaptive_path: 1 # 0 to use regular path, 1 to use path that adjusts to ball in real time
 
 # geometry parameters
@@ -68,18 +68,18 @@ ball_radius: 0.0315           # changes need to be consistent with sphere urdf, 
 ball_model_radius: 0.0315     # changes need to be consistent with sphere_model urdf (collision part), geometry mesh, AND vision
 finger_radius: 0.0195         # changes need to be consistent with franka_box and model urdfs
 EE_offset: [0, 0, 0.0153]     # changes need to be consistent with franka_box urdf
-table_offset: -0.0245 #-0.0245      # chances need to be consistent with franka_box, model urdf, AND vision
-model_table_offset: -0.0245 #-0.0245 # changes need to be consistent with model urdf
+table_offset: -0.0038 #-0.0245      # chances need to be consistent with franka_box, model urdf, AND vision
+model_table_offset: -0.0038 #-0.0245 # changes need to be consistent with model urdf
 
 # Misc
 contact_threshold: 0.01
 enable_heuristic: 0
 enable_contact: 1
-ball_stddev: 0.00 # standard deviation of 0-mean noise on ball state estimation
+ball_stddev: 0.001 # standard deviation of 0-mean noise on ball state estimation
 
 # gaiting parameters
-roll_phase: 1.5  #2.5
-return_phase: 0.8 #0.75
+roll_phase: 1.5  #2.5                           # APPROX： 1.5 (realtime rate 1)
+return_phase: 0.8 #0.75                         # APPROX： 0.8 (realtime rate 1)
 gait_parameters: [0.022, 0.0921, 0.0881, 0.0701] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
 # gait parameters represent height above the table
 

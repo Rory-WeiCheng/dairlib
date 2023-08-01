@@ -51,11 +51,11 @@ These steps will write the extrinic camera info into ```src/kuka_vision/tagslam_
 
 ### Table Mask Calibration
 Ensure that the entire table is visible (not occluded by the ball or the franka)
-1. ```cd ~/adam_ws/franka_ws/catkin_ws```
+1. ```cd ~/alp_ws/franka_ws/catkin_ws```
 2. ```source devel/setup.bash```
 3. ```rosrun franka_vision table_mask_calib.py```
 4. Follow the prompts and drag the sliders until you are happy with the table mask.  It doesn't need to be perfect; the table mask is simply used to remove irrelevant edges for the downstream vision algorithm.
-5. ```Ctrl+C``` in the terminal and follow the prompts to update the table masks.  The table masks are stored in ```~/adam_ws/franka_ws/catkin_ws/src/franka_vision/calibration```
+5. ```Ctrl+C``` in the terminal and follow the prompts to update the table masks.  The table masks are stored in ```~/alp_ws/franka_ws/catkin_ws/src/franka_vision/calibration```
 
 ### Table Height Calibration
 Ensure that the correct end effector is attached before proceeding.
@@ -110,7 +110,7 @@ Before beginning, make sure all the calibration steps have been completed.
 ##### Franka PC
 1. Start procman
 ```
-cd ~/adam_ws/dairlib
+cd ~/alp_ws/dairlib
 source ../franka_ws/catkin_ws/devel/setup.bash
 bot-procman-sheriff -l examples/franka_trajectory_following/procman_script_c3.pmd
 ```

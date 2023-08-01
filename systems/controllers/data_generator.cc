@@ -160,11 +160,11 @@ void Data_Generator::CalcData(const Context<double>& context,
 
   // parse franka state info, 2023.7.10 add extra exponential filter here
   VectorXd ball = q_plant.tail(7);
-  ball.tail(3) = p_IIR_values_[0] * ball.tail(3) + p_IIR_values_[1] * prev_position_;
+//  ball.tail(3) = p_IIR_values_[0] * ball.tail(3) + p_IIR_values_[1] * prev_position_;
   prev_position_ = ball.tail(3);
 
   VectorXd ball_dot = v_plant.tail(6);
-  ball_dot.tail(3) = v_IIR_values_[0] * ball_dot.tail(3) + v_IIR_values_[1] * prev_velocity_;
+//  ball_dot.tail(3) = v_IIR_values_[0] * ball_dot.tail(3) + v_IIR_values_[1] * prev_velocity_;
   Vector3d ball_velocity = ball_dot.tail(3);
 
   double ball_radius = param_.ball_model_radius;
