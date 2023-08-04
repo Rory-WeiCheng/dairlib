@@ -122,16 +122,16 @@ int DoMain(int argc, char* argv[]) {
   builder.Connect(*sender, *robot_output_pub);
 
 // extra port that publish the not filtered (raw) data
-  auto sender_raw = builder.AddSystem<dairlib::systems::RobotOutputSender>(plant, true);
-  auto robot_data_checking = builder.AddSystem(
-      LcmPublisherSystem::Make<dairlib::lcmt_robot_output>(
-          "STATE_ESTIMATE_RAW", pub_lcm,
-          {drake::systems::TriggerType::kForced}));
-  builder.Connect(state_estimator->get_output_port(2),
-                  sender_raw->get_input_port(0));
-  builder.Connect(state_estimator->get_output_port(1),
-                  sender_raw->get_input_port(1));
-  builder.Connect(*sender_raw, *robot_data_checking);
+//  auto sender_raw = builder.AddSystem<dairlib::systems::RobotOutputSender>(plant, true);
+//  auto robot_data_checking = builder.AddSystem(
+//      LcmPublisherSystem::Make<dairlib::lcmt_robot_output>(
+//          "STATE_ESTIMATE_RAW", pub_lcm,
+//          {drake::systems::TriggerType::kForced}));
+//  builder.Connect(state_estimator->get_output_port(2),
+//                  sender_raw->get_input_port(0));
+//  builder.Connect(state_estimator->get_output_port(1),
+//                  sender_raw->get_input_port(1));
+//  builder.Connect(*sender_raw, *robot_data_checking);
 
 
   auto sys = builder.Build();

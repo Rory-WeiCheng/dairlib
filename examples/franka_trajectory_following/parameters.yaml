@@ -24,7 +24,7 @@ Q_ball_x: 1000000 # 10000                              # APPROX： 1000000
 Q_ball_y: 1000000 # 10000                              # APPROX： 1000000
 Q_finger_vel: 10        # 10 translational velocity cost
 Q_ball_vel: 0.1         # 0.1 angular & translational velocity cost
-Qnew_finger: 1000    # 1000000  Qnew costs             # APPROX： 500
+Qnew_finger: 500    # 1000000  Qnew costs             # APPROX： 500
 Qnew_ball_x: 1                                         # APPROX： 1
 Qnew_ball_y: 1                                         # APPROX： 1
 R: 0.01                 # torque cost in xyz
@@ -48,7 +48,7 @@ stabilize_time1: 0.5 #0.5
 move_time: 0.75 #0.75
 stabilize_time2: 0.75 #0.75
 sim_dt: 0.0001
-realtime_rate: 1
+realtime_rate: 0.5
 
 # trajectory parameters
 traj_radius: 0.1 # 0.1
@@ -75,11 +75,11 @@ model_table_offset: -0.0038 #-0.0245 # changes need to be consistent with model 
 contact_threshold: 0.01
 enable_heuristic: 0
 enable_contact: 1
-ball_stddev: 0.001 # standard deviation of 0-mean noise on ball state estimation
+ball_stddev: 0.00 # standard deviation of 0-mean noise on ball state estimation
 
 # gaiting parameters
-roll_phase: 1.5  #2.5                           # APPROX： 1.5 (realtime rate 1)
-return_phase: 0.8 #0.75                         # APPROX： 0.8 (realtime rate 1)
+roll_phase: 1  #2.5                           # APPROX： 1.5 (realtime rate 1)
+return_phase: 0.5 #0.75                         # APPROX： 0.8 (realtime rate 1)
 gait_parameters: [0.022, 0.0921, 0.0881, 0.0701] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
 # gait parameters represent height above the table
 
