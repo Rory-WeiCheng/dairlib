@@ -231,11 +231,15 @@ def process_learning_visual_channel(data):
     total_loss = []
     dyn_loss = []
     lcp_loss = []
+    period_loss = []
+    period_dyn_loss = []
+    period_lcp_loss = []
     c_grad = []
     d_grad = []
     lambda_n = []
     lambda_all = []
     residual = []
+    Dlambda = []
 
     for msg in data:
         # get the state from residual dataset
@@ -244,17 +248,22 @@ def process_learning_visual_channel(data):
         total_loss.append(msg.total_loss)
         dyn_loss.append(msg.dyn_loss)
         lcp_loss.append(msg.lcp_loss)
+        period_loss.append(msg.period_loss)
+        period_dyn_loss.append(msg.period_dyn_loss)
+        period_lcp_loss.append(msg.period_lcp_loss)
         c_grad.append(msg.c_grad)
         d_grad.append(msg.d_grad)
         lambda_n.append(msg.lambda_n)
         lambda_all.append(msg.lambda_check)
         residual.append(msg.res_check)
+        Dlambda.append(msg.Dlambda_check)
 
     return {'t': np.array(t), 'total_loss': np.array(total_loss), 'dyn_loss': np.array(dyn_loss), 'lcp_loss': np.array(lcp_loss),
             'loss_stack': np.column_stack((np.array(total_loss),np.array(dyn_loss),np.array(lcp_loss))),
-            'c_grad': np.array(c_grad),'d_grad': np.array(d_grad), 'lambda_n': np.array(lambda_n), 'lambda_all': np.array(lambda_all),
+            'period_loss_stack': np.column_stack((np.array(period_loss),np.array(period_dyn_loss),np.array(period_lcp_loss))),
+            'c_grad': np.array(c_grad),'d_grad': np.array(d_grad)[:,-3:], 'lambda_n': np.array(lambda_n), 'lambda_all': np.array(lambda_all),
             'c_grad_eeb':np.array(c_grad)[:,0:4], 'c_grad_bg':np.array(c_grad)[:,4:8], 'lambda_n_eeb': np.array(lambda_n)[:,0].reshape(-1, 1),
-            'lambda_eeb': np.array(lambda_all)[:,0:4], 'residual': np.array(residual)[:,-3:]
+            'lambda_eeb': np.array(lambda_all)[:,0:4], 'residual': np.array(residual), 'Dlambda': np.array(Dlambda)
             }
 
 
@@ -712,6 +721,7 @@ def plot_learning_visual(learning_visual, key, time_slice, ylabel=None, title = 
               'c_grad_bg': 'LCP Offset Gradient (ball and ground)',
               'd_grad': 'Dynamic Offset Gradient',
               'loss_stack': 'Learning loss',
+              'period_loss_stack':'Learning Period Loss',
               'lambda_n_eeb': 'normal contact (EE and ball)',
               'lambda_eeb': 'contact forces (EE and ball)',
               'residual': 'Ball Velocity Residual'
@@ -720,6 +730,7 @@ def plot_learning_visual(learning_visual, key, time_slice, ylabel=None, title = 
                'c_grad_bg': 'c_grad_bg',
                'd_grad': 'd_grad',
                'loss_stack': 'loss',
+               'period_loss_stack':'period loss',
                'lambda_n_eeb': 'normal contact (EE and ball) (N)',
                'lambda_eeb': 'contact forces (EE and ball) (N)',
                'residual': 'Ball Velocity Residual (m/s)'
@@ -735,7 +746,7 @@ def plot_learning_visual(learning_visual, key, time_slice, ylabel=None, title = 
         legend = ['c_grad_4', 'c_grad_5', 'c_grad_6', 'c_grad_7']
     elif key == 'd_grad':
         legend = ['d_grad_6', 'd_grad_7', 'd_grad_8']
-    elif key == 'loss_stack':
+    elif key == 'loss_stack' or key == 'period_loss_stack':
         legend = ['total_loss', 'dyn_loss', 'lcp_loss']
     elif key == 'lambda_n_eeb':
         legend = ['lambda_n_eeb']

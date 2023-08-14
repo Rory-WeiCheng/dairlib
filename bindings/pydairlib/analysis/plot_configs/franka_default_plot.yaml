@@ -49,6 +49,7 @@ plot_c_grad_eeb: true
 plot_c_grad_bg: true
 plot_d_grad: true
 plot_loss: true
+plot_period_loss: true
 plot_lambda_n_eeb: true
 plot_lambda_eeb: true
 plot_residual: true

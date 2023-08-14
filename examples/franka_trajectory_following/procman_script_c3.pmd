@@ -125,6 +125,10 @@ group "8.Logging, Utils" {
         exec = "bazel-bin/examples/franka_trajectory_following/scripts/end_logging_test";
         host = "localhost";
     }
+    cmd "g.update_filter" {
+        exec = "bazel-bin/examples/franka_trajectory_following/Update_Filter";
+        host = "localhost";
+    }
 }
 cmd "3.safety" {
     exec = "rosrun franka_safety safety.py";

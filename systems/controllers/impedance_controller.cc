@@ -256,6 +256,7 @@ void ImpedanceController::CalcControl(const Context<double>& context,
     }
   }
   VectorXd tau = J_franka.transpose() * Lambda * (K_*xtilde + B_*xtilde_dot) + tau_int + C_franka;
+
   
   // add feedforward force term if contact is desired
   MatrixXd Jc(contact_pairs_.size() + 2 * contact_pairs_.size() * num_friction_directions_, n_);

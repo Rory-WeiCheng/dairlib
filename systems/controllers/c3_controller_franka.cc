@@ -317,7 +317,6 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
   if ( ts < roll_phase ) {
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7];
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8];
-//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] - gap_adding;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = traj_desired_vector[q_map_.at("tip_link_1_to_base_z")];
 //    std::cout<< "rolling phase" << std::endl;
   }
@@ -326,7 +325,6 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[0]; //0.55;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[1]; //0.1;
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + table_offset;
-//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + 2 * (ball_radius - 0.0315) + table_offset - gap_adding;
       traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + 2 * (ball_radius - 0.0315) + table_offset;
 //      std::cout<< "upwards phase" << std::endl;
   }
@@ -335,7 +333,6 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7] - back_dist*error_hat(0);
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8] - back_dist*error_hat(1);
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + table_offset;
-//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + 2 * (ball_radius - 0.0315) + table_offset - gap_adding;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + 2 * (ball_radius - 0.0315) + table_offset;
 //      std::cout<< "side ways phase" << std::endl;
   }
@@ -344,7 +341,6 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7] - back_dist*error_hat(0);
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8] - back_dist*error_hat(1);
 //    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + table_offset;
-//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + 2 * (ball_radius - 0.0315) + table_offset - gap_adding;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + 2 * (ball_radius - 0.0315) + table_offset;
 //      std::cout<< "position finger phase" << std::endl;
   }
@@ -513,15 +509,12 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   }
   /// check the force given by first LCS
   drake::solvers::MobyLCPSolver<double> LCPSolver;
-  VectorXd force_checking;
-
-  auto flag_checking = LCPSolver.SolveLcpLemke(system_.F_[0], system_.E_[0] * scaling * state + system_.c_[0] * scaling + system_.H_[0] * scaling * input,
-                                        &force_checking);
-  (void)flag_checking; // suppress compiler unused variable warning
 
   /// still use the 0.1s to generate lcs. i.e. no system_scaling2, currently still keep it to see short term prediction
-//  residual_lcs.c_[0] = residual_lcs.c_[0] * 0.1 / dt;
-//  residual_lcs.d_[0] = residual_lcs.d_[0] * 0.1 / dt;
+  residual_lcs.c_[0] = residual_lcs.c_[0] * 0.1 / dt;
+  residual_lcs.d_[0] = residual_lcs.d_[0] * dt / 0.1;
+
+
   auto system_scaling_pair2 = solvers::LCSFactoryFrankaConvex::LinearizePlantToLCS(
       plant_f_, context_f_, plant_ad_f_, context_ad_f_, contact_pairs,
       num_friction_directions_, mu_, dt, residual_lcs);
@@ -543,10 +536,12 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
                                         &force_dt);
   (void)flag_dt; // suppress compiler unused variable warning
 
-  VectorXd state_next = system_.A_[0] * state + system_.B_[0] * input + system_.D_[0] * force / scaling + system_.d_[0];
-//  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.d_[0];
-  VectorXd direction = (state_next - state); // no need to do normalization
-  state_next = state + direction / 0.1 * dt;
+//  VectorXd state_next = system_.A_[0] * state + system_.B_[0] * input + system_.D_[0] * force / scaling + system_.d_[0];
+  VectorXd state_next = system2_.A_[0] * state + system2_.B_[0] * input + system2_.D_[0] * force_dt / scaling2 + system2_.d_[0];
+
+//  VectorXd direction = (state_next - state); // no need to do normalization
+//  state_next = state + direction / 0.1 * dt;
+
 //  state_next.segment(10,3) = (state_next.segment(0,3) - state.segment(0,3)) / dt;
 //  std::cout<< 1 / 0.1 * dt << std::endl;
 
@@ -576,21 +571,14 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
 
   VectorXd force_des = VectorXd::Zero(6);
 //  force_des << force(0), force(2), force(4), force(5), force(6), force(7);
-  force_des(0) = force_checking(0) + force_checking(1) + force_checking(2) + force_checking(3);
-  force_des(1) = force_checking(0);
-  force_des(2) = force_checking(1);
-  force_des(3) = force_checking(2);
-  force_des(4) = force_checking(3);
+//  VectorXd state_check = system_.A_[0] * state + system_.B_[0] * input + system_.D_[0] * force / scaling + system_.d_[0];
+  force_des(0) = force(0) + force(1) + force(2) + force(3);
+  force_des(1) = force(0);
+  force_des(2) = force(1);
+  force_des(3) = force(2);
+  force_des(4) = force(3);
   force_des(5) = force_dt(0) + force_dt(1) + force_dt(2) + force_dt(3);
 
-//  residual_lcs.c_[0] = residual_lcs.c_[0] * dt / 0.1;
-//  VectorXd Dist = system_.E_[0] * scaling * state + system_.c_[0] * scaling + system_.H_[0] * scaling * input + system_.F_[0] * force_checking;
-  VectorXd Dist = system_.E_[0] * scaling * state + system_.H_[0] * scaling * input + system_.F_[0] * force_checking;
-
-  double Resc_avg = (residual_lcs.c_[0](0) + residual_lcs.c_[0](1) + residual_lcs.c_[0](2) + residual_lcs.c_[0](3)) / 4;
-  double Dist_avg = (Dist(0) + Dist(1) + Dist(2) + Dist(3)) / 4;
-//  force_des(1) = gap_adding;
-//  force_des(2) = Resc_avg - Dist_avg;
 
 //  VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size());
   VectorXd st_desired(force_des.size() + state_next.size() + orientation_d.size() + ball_xyz_d.size() + ball_xyz.size() + true_ball_xyz.size() + input.size());

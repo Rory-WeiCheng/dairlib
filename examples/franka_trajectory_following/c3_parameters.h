@@ -92,6 +92,16 @@ struct C3Parameters {
     a->Visit(DRAKE_NVP(dt_filter_length));
     a->Visit(DRAKE_NVP(alpha_p));
     a->Visit(DRAKE_NVP(alpha_v));
+
+    // filter_new (FIR low pass)
+    a->Visit(DRAKE_NVP(position_degree));
+    a->Visit(DRAKE_NVP(position_cutoff_freq));
+    a->Visit(DRAKE_NVP(position_window));
+    a->Visit(DRAKE_NVP(velocity_degree));
+    a->Visit(DRAKE_NVP(velocity_cutoff_freq));
+    a->Visit(DRAKE_NVP(velocity_window));
+    a->Visit(DRAKE_NVP(position_FIR_para));
+    a->Visit(DRAKE_NVP(velocity_FIR_para));
   }
 
   // impedance control parameters
@@ -178,4 +188,14 @@ struct C3Parameters {
   uint32_t dt_filter_length;
   double alpha_p;
   double alpha_v;
+
+  //  filter_new (FIR low pass)
+  int position_degree;
+  double position_cutoff_freq;
+  std::string position_window;
+  int velocity_degree;
+  double velocity_cutoff_freq;
+  std::string velocity_window;
+  VectorXd position_FIR_para;
+  VectorXd velocity_FIR_para;
 };

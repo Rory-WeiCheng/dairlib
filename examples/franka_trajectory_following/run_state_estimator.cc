@@ -21,6 +21,9 @@
 #include "examples/franka_trajectory_following/c3_parameters.h"
 #include "dairlib/lcmt_robot_output.hpp"
 
+// 2023.8.11 newly added
+#include "common/eigen_utils.h"
+
 using drake::systems::DiagramBuilder;
 using drake::systems::Simulator;
 using drake::systems::lcm::LcmPublisherSystem;
@@ -73,7 +76,8 @@ int DoMain(int argc, char* argv[]) {
 //  std::vector<double> v_FIR_values = {(1-alpha), alpha};
 //  std::vector<double> v_FIR_values = {0.5, 0.5};
   std::vector<double> v_FIR_values = {0.2, 0.2, 0.2, 0.2, 0.2};
-
+  std::vector<double> p_FIR_values_test = CopyVectorXdToStdVector(param.position_FIR_para);
+  std::vector<double> v_FIR_values_test = CopyVectorXdToStdVector(param.velocity_FIR_para);
 
   auto state_estimator = 
     builder.AddSystem<dairlib::systems::C3StateEstimator>(p_FIR_values, v_FIR_values);

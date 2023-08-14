@@ -257,6 +257,17 @@ def main():
     scipy.io.savemat('xy_ball.mat', mdic)
     print("finished creating mat file")
 
+    # # save state estimation data
+    # t_record = robot_output['t_x']
+    # q_record = robot_output['q']
+    # v_record = robot_output['v']
+    # u_record = robot_output['u']
+    # print("creating state estimation mat file")
+    # mdic = {"q": q_record, "v": v_record, 't': t_record, 'u': u_record}
+    # scipy.io.savemat("{}/{}/state_estimation{}.mat".format(logdir, log_num, log_num), mdic)
+    # print("finished creating state estimation  mat file")
+
+
 
     ''' Plot Joint Positions '''
     if config['plot_joint_positions']:
@@ -546,6 +557,11 @@ def main():
         check_flag_and_save(loss_ps,
                             "{}/{}/figures/loss.svg".format(logdir, log_num, log_num),
                             save_flag = config['save_plots'])
+    if config['plot_period_loss']:
+        period_loss_ps = mbp_plots.plot_learning_visual(learning_visual, 'period_loss_stack', t_learning_visual_slice)
+        check_flag_and_save(period_loss_ps,
+                            "{}/{}/figures/period_loss.svg".format(logdir, log_num, log_num),
+                            save_flag = config['save_plots'])
     if config['plot_lambda_n_eeb']:
         lambda_n_eeb_ps = mbp_plots.plot_learning_visual(learning_visual, 'lambda_n_eeb', t_learning_visual_slice)
         check_flag_and_save(lambda_n_eeb_ps,
@@ -561,6 +577,15 @@ def main():
         check_flag_and_save(residual_ps,
                             "{}/{}/figures/residual.svg".format(logdir, log_num, log_num),
                             save_flag = config['save_plots'])
+
+    # # save state estimation data
+    t_record = learning_visual['t']
+    res_record = learning_visual['residual']
+    Dlamba_record = learning_visual['Dlambda']
+    print("creating residual mat file")
+    mdic = {"t": t_record, "res": res_record,"Dlambda": Dlamba_record}
+    scipy.io.savemat("{}/{}/residual_checking{}.mat".format(logdir, log_num, log_num), mdic)
+    print("finished creating residual mat file")
 
 
 

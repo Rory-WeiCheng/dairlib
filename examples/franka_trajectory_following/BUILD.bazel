@@ -125,6 +125,15 @@ py_binary(
             "@drake//manipulation/models/franka_description:models"],
 )
 
+py_binary(
+    name = "Update_Filter",
+    srcs = ["Update_Filter.py"],
+    deps = [
+        "//bindings/pydairlib",
+        "@drake//bindings/pydrake",
+    ]
+)
+
 # cc_binary(
 #    name = "run_impedance_experiment",
 #    srcs = ["run_impedance_experiment.cc"],
