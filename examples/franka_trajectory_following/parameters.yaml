@@ -65,7 +65,7 @@ enable_adaptive_path: 1 # 0 to use regular path, 1 to use path that adjusts to b
 
 # geometry parameters
 ball_radius: 0.0315           # changes need to be consistent with sphere urdf, geometry mesh, AND vision
-ball_model_radius: 0.0335     # changes need to be consistent with sphere_model urdf (collision part), geometry mesh, AND vision
+ball_model_radius: 0.0315     # changes need to be consistent with sphere_model urdf (collision part), geometry mesh, AND vision
 finger_radius: 0.0195         # changes need to be consistent with franka_box and model urdfs
 EE_offset: [0, 0, 0.0153]     # changes need to be consistent with franka_box urdf
 table_offset: -0.0038 #-0.0245      # chances need to be consistent with franka_box, model urdf, AND vision

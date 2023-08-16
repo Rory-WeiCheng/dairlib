@@ -130,13 +130,45 @@ def process_ball_position_channel(data):
     cam_statuses.append(cam_status_temp)
 
     t.append(msg.utime / 1e6)
-  
+
   return {'t': np.array(t),
           'xyz': np.array(xyz),
           'num_cameras_used': np.array(num_cameras_used).reshape(-1, 1),
           'cam_statuses': cam_statuses,
           'id': np.array(id),
           'dt': np.array(dt).reshape(-1, 1)}
+
+# simple one for checking
+# def process_ball_position_channel(data):
+#     id = []
+#     num_cameras_used = []
+#     xyz = []
+#     cam_statuses = []
+#     t = []
+#
+#     prev_t = 0.0
+#     prev_id = -1
+#     curr_dt = 0.0
+#     first_message = True
+#     for msg in data:
+#         id.append(msg.id)
+#         num_cameras_used.append(msg.num_cameras_used)
+#
+#         xyz_temp = [msg.xyz[0], msg.xyz[1], msg.xyz[2]]
+#         xyz.append(xyz_temp)
+#
+#         cam_status_temp = []
+#         for i in range(3):
+#             cam_status_temp.append(msg.cam_statuses[i])
+#         cam_statuses.append(cam_status_temp)
+#
+#         t.append(msg.utime / 1e6)
+#
+#     return {'t': np.array(t),
+#             'xyz': np.array(xyz),
+#             'num_cameras_used': np.array(num_cameras_used).reshape(-1, 1),
+#             'cam_statuses': cam_statuses,
+#             'id': np.array(id)}
 
 def process_c3_channel(data):
   x_d = []
@@ -426,6 +458,26 @@ def load_default_franka_channels_adaptive_learning(data, plant, state_channel, i
     learning_visual = process_learning_visual_channel(data[learning_visual])
 
     return robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual
+def load_default_franka_channels_adaptive_learning_hardware(data, plant, state_channel, input_channel, c3_channel, \
+                                                   dataset_channel, residual_channel, learning_visual, cam0_channel,\
+                                                   cam1_channel, cam2_channel, vision_channel):
+
+    print("\nDetected the following channels:")
+    print(data.keys())
+    print('')
+
+    robot_output = process_state_channel(data[state_channel], plant)
+    robot_input = process_effort_channel(data[input_channel], plant)
+    c3_output = process_c3_channel(data[c3_channel])
+    learning_dataset = process_dataset_channel(data[dataset_channel])
+    residual_lcs = process_residual_channel(data[residual_channel])
+    learning_visual = process_learning_visual_channel(data[learning_visual])
+    cam0 = process_ball_position_channel(data[cam0_channel])
+    cam1 = process_ball_position_channel(data[cam1_channel])
+    cam2 = process_ball_position_channel(data[cam2_channel])
+    vision = process_ball_position_channel(data[vision_channel])
+
+    return robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual, cam0, cam1, cam2, vision
 
 def load_franka_state_estimate_channel(data, plant, state_channel):
     return process_state_channel(data[state_channel], plant)

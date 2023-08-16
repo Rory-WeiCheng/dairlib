@@ -193,14 +193,25 @@ def main():
     #                  "CONTROLLER_INPUT", "CAM0_OUTPUT", "CAM1_OUTPUT",
     #                  "CAM2_OUTPUT", "VISION_OUTPUT")
 
-    # test old logging script locally
-    robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual = \
-    get_log_data(log,                                                       # log
+    # hardware data processing
+    robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual,\
+    cam0_output, cam1_output, cam2_output, vision_output = \
+        get_log_data(log,                                                   # log
                      franka_channels,                                       # lcm channels
                      config['end_time'],                                    # end time
-                     mbp_plots.load_default_franka_channels_adaptive_learning,    # processing callback
-                     plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT",
-                     "CONTROLLER_INPUT", "LEARNING_DATASET", "RESIDUAL_LCS", "DATA_CHECKING")
+                     mbp_plots.load_default_franka_channels_adaptive_learning_hardware,    # processing callback
+                     plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT_WO_G",
+                     "CONTROLLER_INPUT", "LEARNING_DATASET", "RESIDUAL_LCS", "DATA_CHECKING", "CAM0_OUTPUT",
+                     "CAM1_OUTPUT",  "CAM2_OUTPUT", "VISION_OUTPUT")
+
+    # # test old logging script locally
+    # robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual = \
+    # get_log_data(log,                                                       # log
+    #                  franka_channels,                                       # lcm channels
+    #                  config['end_time'],                                    # end time
+    #                  mbp_plots.load_default_franka_channels_adaptive_learning,    # processing callback
+    #                  plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT_WO_G",
+    #                  "CONTROLLER_INPUT", "LEARNING_DATASET", "RESIDUAL_LCS", "DATA_CHECKING")
 
     print('Finished processing log - making plots')
 
@@ -254,10 +265,10 @@ def main():
 
     print("creating mat file")
     mdic = {"x": xxx, "y": yyy}
-    scipy.io.savemat('xy_ball.mat', mdic)
+    scipy.io.savemat("{}/{}/ball_xy{}.mat".format(logdir, log_num, log_num), mdic)
     print("finished creating mat file")
 
-    # # save state estimation data
+    # save state estimation data
     # t_record = robot_output['t_x']
     # q_record = robot_output['q']
     # v_record = robot_output['v']
@@ -266,6 +277,15 @@ def main():
     # mdic = {"q": q_record, "v": v_record, 't': t_record, 'u': u_record}
     # scipy.io.savemat("{}/{}/state_estimation{}.mat".format(logdir, log_num, log_num), mdic)
     # print("finished creating state estimation  mat file")
+
+    # save simple vision data for checking
+    # t_record = vision_output['t']
+    # id_record = vision_output['id']
+    # xyz_record = vision_output['xyz']
+    # print("creating vision mat file")
+    # mdic = {'t_record': t_record, 'id_record': id_record, 'xyz_record': xyz_record}
+    # scipy.io.savemat("{}/{}/vision_checking{}.mat".format(logdir, log_num, log_num), mdic)
+    # print("finished creating vision mat file")
 
 
 
@@ -401,7 +421,7 @@ def main():
 
     print("creating mat file for solve times")
     mdic = {"t": ttt, "s": sss}
-    scipy.io.savemat('solve_times.mat', mdic)
+    scipy.io.savemat("{}/{}/c3_solvetime{}.mat".format(logdir, log_num, log_num), mdic)
 
     ''' Plot EE error '''
     if config['plot_EE_error']:
@@ -579,13 +599,13 @@ def main():
                             save_flag = config['save_plots'])
 
     # # save state estimation data
-    t_record = learning_visual['t']
-    res_record = learning_visual['residual']
-    Dlamba_record = learning_visual['Dlambda']
-    print("creating residual mat file")
-    mdic = {"t": t_record, "res": res_record,"Dlambda": Dlamba_record}
-    scipy.io.savemat("{}/{}/residual_checking{}.mat".format(logdir, log_num, log_num), mdic)
-    print("finished creating residual mat file")
+    # t_record = learning_visual['t']
+    # res_record = learning_visual['residual']
+    # Dlamba_record = learning_visual['Dlambda']
+    # print("creating residual mat file")
+    # mdic = {"t": t_record, "res": res_record,"Dlambda": Dlamba_record}
+    # scipy.io.savemat("{}/{}/residual_checking{}.mat".format(logdir, log_num, log_num), mdic)
+    # print("finished creating residual mat file")
 
 
 
