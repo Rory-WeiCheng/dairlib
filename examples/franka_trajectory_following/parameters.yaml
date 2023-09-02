@@ -22,7 +22,7 @@ Q_default: 0
 Q_finger: 50   # 500      # finger xyz cost           # APPROX： 500
 Q_ball_x: 500000 # 10000                              # APPROX： 1000000
 Q_ball_y: 500000 # 10000                              # APPROX： 1000000
-Q_ball_z: 0 # 10000                              # APPROX： 1000000
+Q_ball_z: 500000 # 10000                              # APPROX： 1000000
 Q_finger_vel: 10        # 10 translational velocity cost
 Q_ball_vel: 0.1         # 0.1 angular & translational velocity cost
 Qnew_finger: 500    # 1000000  Qnew costs             # APPROX： 500
