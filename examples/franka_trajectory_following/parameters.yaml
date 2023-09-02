@@ -20,8 +20,9 @@ pushing_offset: 0 #-0.001
 mu: 1                  # changes need to be consistent with urdf
 Q_default: 0
 Q_finger: 50   # 500      # finger xyz cost           # APPROX： 500
-Q_ball_x: 100000 # 10000                              # APPROX： 1000000
-Q_ball_y: 100000 # 10000                              # APPROX： 1000000
+Q_ball_x: 500000 # 10000                              # APPROX： 1000000
+Q_ball_y: 500000 # 10000                              # APPROX： 1000000
+Q_ball_z: 0 # 10000                              # APPROX： 1000000
 Q_finger_vel: 10        # 10 translational velocity cost
 Q_ball_vel: 0.1         # 0.1 angular & translational velocity cost
 Qnew_finger: 500    # 1000000  Qnew costs             # APPROX： 500
@@ -60,7 +61,7 @@ time_increment: 1
 hold_order: 0 # 0 for zero order hold, 1 for first order hold
 
 # if enable_adaptive_path is set to 1, the trajectory above is not used
-lead_angle: -20 # angle in degrees
+lead_angle: -15 # angle in degrees
 enable_adaptive_path: 1 # 0 to use regular path, 1 to use path that adjusts to ball in real time
 
 # geometry parameters
@@ -78,9 +79,10 @@ enable_contact: 1
 ball_stddev: 0.00 # standard deviation of 0-mean noise on ball state estimation
 
 # gaiting parameters
-roll_phase: 1  #2.5                           # APPROX： 1.5 (realtime rate 1)
+roll_phase: 1.5  #2.5                           # APPROX： 1.5 (realtime rate 1)
 return_phase: 0.5 #0.75                         # APPROX： 0.8 (realtime rate 1)
-gait_parameters: [0.02, 0.0951, 0.0911, 0.0701] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
+gait_parameters: [0.025, 0.0921, 0.0891, 0.0701] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
+# [0.025, 0.0921, 0.0891, 0.0701] work good for right and large model
 # gait parameters represent height above the table
 
 # filters

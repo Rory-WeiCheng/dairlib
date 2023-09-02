@@ -283,6 +283,36 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
     // note that the x and y arguments are intentionally flipped
     // since we want to get the angle from the y-axis, not the x-axis
     double angle = atan2(x,y);
+
+//    double theta;
+//    if (rolling_direction_ == 1){
+//        theta = angle - 0.2 * param_.lead_angle * PI / 180;
+//    }
+//    if (rolling_direction_ == 2){
+//        theta = angle - param_.lead_angle * PI / 180;
+//    }
+//    if (rolling_direction_ == 3){
+//        theta = angle + 0.2 * param_.lead_angle * PI / 180;
+//    }
+//    else if (rolling_direction_ == 0)
+//    {
+//        theta = angle + param_.lead_angle * PI / 180;
+//    }
+//
+//
+//    if (angle < 5 * PI / 180 and rolling_direction_ == 0){
+//        rolling_direction_ = 1;
+//    }
+//    if (angle > 30 * PI / 180 and rolling_direction_ == 1){
+//        rolling_direction_ = 2;
+//    }
+//    if (angle > 175 * PI / 180 and angle < 200 * PI / 180 and rolling_direction_ == 2){
+//        rolling_direction_ = 3;
+//    }
+//    if (angle < 150 * PI / 180 and rolling_direction_ == 3){
+//          rolling_direction_ = 0;
+//    }
+
     double theta = angle + param_.lead_angle * PI / 180;
 
     traj_desired_vector(q_map_.at("base_x")) = x_c + traj_radius * sin(theta);
@@ -291,9 +321,13 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
   }
 
   // compute sphere positional error
+//  Vector3d ball_xyz_d(traj_desired_vector(q_map_.at("base_x")),
+//                      traj_desired_vector(q_map_.at("base_y")),
+//                      traj_desired_vector(q_map_.at("base_z")));
+
   Vector3d ball_xyz_d(traj_desired_vector(q_map_.at("base_x")),
-                      traj_desired_vector(q_map_.at("base_y")),
-                      traj_desired_vector(q_map_.at("base_z")));
+                        traj_desired_vector(q_map_.at("base_y")),
+                        traj_desired_vector(q_map_.at("base_z")));
   Vector3d error_xy = ball_xyz_d - ball_xyz;
   error_xy(2) = 0;
   Vector3d error_hat = error_xy / error_xy.norm();
@@ -324,24 +358,24 @@ void C3Controller_franka::CalcControl(const Context<double>& context,
   else if (ts < roll_phase + return_phase / 3){
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[0]; //0.55;
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[1]; //0.1;
-//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + table_offset;
-      traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + 2 * (ball_radius - 0.0315) + table_offset;
+    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + table_offset;
+//      traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(1) + 2 * (ball_radius - 0.0315) + table_offset;
 //      std::cout<< "upwards phase" << std::endl;
   }
   /// side ways phase
   else if( ts < roll_phase + 2 * return_phase / 3 ) {
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7] - back_dist*error_hat(0);
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8] - back_dist*error_hat(1);
-//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + table_offset;
-    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + 2 * (ball_radius - 0.0315) + table_offset;
+    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + table_offset;
+//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(2) + 2 * (ball_radius - 0.0315) + table_offset;
 //      std::cout<< "side ways phase" << std::endl;
   }
   /// position finger phase
   else{
     traj_desired_vector[q_map_.at("tip_link_1_to_base_x")] = state[7] - back_dist*error_hat(0);
     traj_desired_vector[q_map_.at("tip_link_1_to_base_y")] = state[8] - back_dist*error_hat(1);
-//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + table_offset;
-    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + 2 * (ball_radius - 0.0315) + table_offset;
+    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + table_offset;
+//    traj_desired_vector[q_map_.at("tip_link_1_to_base_z")] = param_.gait_parameters(3) + 2 * (ball_radius - 0.0315) + table_offset;
 //      std::cout<< "position finger phase" << std::endl;
   }
   std::vector<VectorXd> traj_desired(Q_.size() , traj_desired_vector);
@@ -478,6 +512,7 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
     Qnew(2,2) = Qnew_finger;
     Qnew(7,7) = param_.Qnew_ball_x;
     Qnew(8,8) = param_.Qnew_ball_y;
+    Qnew(9,9) = param_.Qnew_ball_x;
 //    Rnew = 1 * MatrixXd::Identity(3,3);
   }
 

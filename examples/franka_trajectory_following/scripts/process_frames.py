@@ -1,7 +1,7 @@
 import subprocess
 import os
 import sys
-from franka_logging_utils import get_most_recent_logs
+from franka_logging_utils_test import get_most_recent_logs
 
 def main():
   ''' set up log directory paths '''

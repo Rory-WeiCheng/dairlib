@@ -245,7 +245,7 @@ std::pair<LCS,double> LCSFactoryFrankaConvex::LinearizePlantToLCS(
   H = H + Res_H;
 //  c = c + Res_c;
   c = c + Res_c;
-  c.head(4) = c.head(4) +  0.002 * VectorXd::Ones(4);
+//  c.head(4) = c.head(4) +  0.002 * VectorXd::Ones(4);
 //  c = c + Res_c +  0.15 * VectorXd::Ones(n_contact);
 
   // MPC horizon

@@ -151,6 +151,11 @@ VectorXd C3::Solve(VectorXd& x0, vector<VectorXd>& delta, vector<VectorXd>& w) {
   vector<VectorXd> zfin = SolveQP(x0, Gv, WD);
 
   z = zfin[0];
+  std::cout << "zfin[0]" << zfin[0](9) + 0.0038  - 0.0315 << std::endl;
+  std::cout << "zfin[1]" << zfin[1](9) + 0.0038 - 0.0315 << std::endl;
+  std::cout << "zfin[2]" << zfin[2](9) + 0.0038 - 0.0315 << std::endl;
+  std::cout << "zfin[3]" << zfin[3](9) + 0.0038 - 0.0315<< std::endl;
+  std::cout << "zfin[4]" << zfin[4](9) + 0.0038 - 0.0315 << std::endl;
 
 //  std::cout <<  "contact prediction" << std::endl;
 //      std::cout << zfin[0].segment(n_, m_) << std::endl;

@@ -194,24 +194,32 @@ def main():
     #                  "CAM2_OUTPUT", "VISION_OUTPUT")
 
     # hardware data processing
-    robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual,\
-    cam0_output, cam1_output, cam2_output, vision_output = \
-        get_log_data(log,                                                   # log
-                     franka_channels,                                       # lcm channels
-                     config['end_time'],                                    # end time
-                     mbp_plots.load_default_franka_channels_adaptive_learning_hardware,    # processing callback
-                     plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT_WO_G",
-                     "CONTROLLER_INPUT", "LEARNING_DATASET", "RESIDUAL_LCS", "DATA_CHECKING", "CAM0_OUTPUT",
-                     "CAM1_OUTPUT",  "CAM2_OUTPUT", "VISION_OUTPUT")
+    # robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual,\
+    # cam0_output, cam1_output, cam2_output, vision_output = \
+    #     get_log_data(log,                                                   # log
+    #                  franka_channels,                                       # lcm channels
+    #                  config['end_time'],                                    # end time
+    #                  mbp_plots.load_default_franka_channels_adaptive_learning_hardware,    # processing callback
+    #                  plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT_WO_G",
+    #                  "CONTROLLER_INPUT", "LEARNING_DATASET", "RESIDUAL_LCS", "DATA_CHECKING", "CAM0_OUTPUT",
+    #                  "CAM1_OUTPUT",  "CAM2_OUTPUT", "VISION_OUTPUT")
 
-    # # test old logging script locally
     # robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual = \
-    # get_log_data(log,                                                       # log
+    #     get_log_data(log,                                                   # log
     #                  franka_channels,                                       # lcm channels
     #                  config['end_time'],                                    # end time
     #                  mbp_plots.load_default_franka_channels_adaptive_learning,    # processing callback
-    #                  plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT_WO_G",
+    #                  plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT",
     #                  "CONTROLLER_INPUT", "LEARNING_DATASET", "RESIDUAL_LCS", "DATA_CHECKING")
+
+    # # test old logging script locally
+    robot_output, robot_input, c3_output, learning_dataset, residual_lcs, learning_visual = \
+    get_log_data(log,                                                       # log
+                     franka_channels,                                       # lcm channels
+                     config['end_time'],                                    # end time
+                     mbp_plots.load_default_franka_channels_adaptive_learning,    # processing callback
+                     plant, "FRANKA_STATE_ESTIMATE", "FRANKA_INPUT_WO_G",
+                     "CONTROLLER_INPUT", "LEARNING_DATASET", "RESIDUAL_LCS", "DATA_CHECKING")
 
     print('Finished processing log - making plots')
 

@@ -13,9 +13,9 @@ plot_measured_joint_efforts: true
 plot_desired_joint_efforts: true
 
 # Desired ball/vision plots
-plot_unfiltered_ball_position: true
-plot_vision_dt: true
-plot_num_cameras: true
+plot_unfiltered_ball_position: false
+plot_vision_dt: false
+plot_num_cameras: false
 #plot_camera_channels: ['CAM0_OUTPUT', 'CAM1_OUTPUT', 'CAM2_OUTPUT', 'VISION_OUTPUT']
 plot_camera_channels: []
 

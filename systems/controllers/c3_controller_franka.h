@@ -145,6 +145,9 @@ class C3Controller_franka : public LeafSystem<double> {
   // kalman filter
   // mutable VectorXd xhat_prev;
   // mutable MatrixXd P_prev;
+
+  // add this to make rolling direction back and forth and make have circle
+  mutable int rolling_direction_{3};
 };
 
 }  // namespace controllers
