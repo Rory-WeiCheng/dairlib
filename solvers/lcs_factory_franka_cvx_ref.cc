@@ -209,14 +209,14 @@ std::pair <LCS, double> LCSFactoryFrankaConvexRef::LinearizePlantToLCS(
   MatrixXd H(n_contact, n_input);
   VectorXd c(n_contact);
 
-  E.block(0, 0, n_contact, n_pos) = dt * J_c * AB_v_q + J_c * Nqinv / dt;
+  E.block(0, 0, n_contact, n_pos) = dt * J_c * AB_v_q + E_t.transpose() * J_n * Nqinv / dt;
   E.block(0, n_pos, n_contact, n_vel) = J_c + dt * J_c * AB_v_v;
 
   F = J_c * MinvJ_c_T;
 
   H = dt * J_c * AB_v_u;
 
-  c = E_t.transpose() * phi / dt + dt * J_c * d_v - J_c * Nqinv * plant.GetPositions(context) / dt;
+  c = E_t.transpose() * phi / dt + dt * J_c * d_v - E_t.transpose() * J_n * Nqinv * plant.GetPositions(context) / dt;
 //  std::cout<< "Bias Term" << std::endl;
 //  std::cout<< dt * J_c * d_v << std::endl;
 

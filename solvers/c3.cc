@@ -133,7 +133,7 @@ VectorXd C3::Solve(VectorXd& x0, vector<VectorXd>& delta, vector<VectorXd>& w) {
 
   for (int i = 0; i < options_.admm_iter-1; i++) {
 
-    std::cout << "Iteration" << i <<  std::endl;
+//    std::cout << "Iteration" << i <<  std::endl;
 
     z = ADMMStep(x0, &delta, &w, &Gv);
 // std::cout << "new delta" << i <<  std::endl;
@@ -146,7 +146,7 @@ VectorXd C3::Solve(VectorXd& x0, vector<VectorXd>& delta, vector<VectorXd>& w) {
   vector<VectorXd> WD(N_, VectorXd::Zero(n_ + m_ + k_));
   for (int i = 0; i < N_; i++) {
     WD.at(i) = delta.at(i) - w.at(i);
-    std::cout << "WD [" << i <<"] "<< WD[i] << std::endl;
+//    std::cout << "WD [" << i <<"] "<< WD[i] << std::endl;
   }
 
   vector<VectorXd> zfin = SolveQP(x0, Gv, WD);
@@ -158,11 +158,11 @@ VectorXd C3::Solve(VectorXd& x0, vector<VectorXd>& delta, vector<VectorXd>& w) {
 //  std::cout << "zfin[3] x " << zfin[3](7) << " y " << zfin[3](8) << " z" << zfin[3](9) + 0.0038  - 0.0315 << std::endl;
 //  std::cout << "zfin[4] x " << zfin[4](7) << " y " << zfin[4](8) << " z" << zfin[4](9) + 0.0038  - 0.0315 << std::endl;
 
-    std::cout << "zfin[0] " << zfin[0]<< std::endl;
-    std::cout << "zfin[1] " << zfin[1]<< std::endl;
-    std::cout << "zfin[2] " << zfin[2]<< std::endl;
-    std::cout << "zfin[3] " << zfin[3]<< std::endl;
-    std::cout << "zfin[4] " << zfin[4]<< std::endl;
+//    std::cout << "zfin[0] " << zfin[0]<< std::endl;
+//    std::cout << "zfin[1] " << zfin[1]<< std::endl;
+//    std::cout << "zfin[2] " << zfin[2]<< std::endl;
+//    std::cout << "zfin[3] " << zfin[3]<< std::endl;
+//    std::cout << "zfin[4] " << zfin[4]<< std::endl;
 
 //  std::cout <<  "contact prediction" << std::endl;
 //      std::cout << zfin[0].segment(n_, m_) << std::endl;
@@ -211,17 +211,17 @@ VectorXd C3::ADMMStep(VectorXd& x0, vector<VectorXd>* delta,
 
   for (int i = 0; i < N_; i++) {
     WD.at(i) = delta->at(i) - w->at(i);
-    std::cout << "WD (inside ADMM step) [" << i <<"] "<< WD[i] << std::endl;
+//    std::cout << "WD (inside ADMM step) [" << i <<"] "<< WD[i] << std::endl;
   }
 
 //  auto start = std::chrono::high_resolution_clock::now();
 
   vector<VectorXd> z = SolveQP(x0, *Gv, WD);
-  std::cout << "z[0] " << z[0] << std::endl;
-  std::cout << "z[1] " << z[1] << std::endl;
-  std::cout << "z[2] " << z[2] << std::endl;
-  std::cout << "z[3] " << z[3] << std::endl;
-  std::cout << "z[4] " << z[4] << std::endl;
+//  std::cout << "z[0] " << z[0] << std::endl;
+//  std::cout << "z[1] " << z[1] << std::endl;
+//  std::cout << "z[2] " << z[2] << std::endl;
+//  std::cout << "z[3] " << z[3] << std::endl;
+//  std::cout << "z[4] " << z[4] << std::endl;
 
 
 

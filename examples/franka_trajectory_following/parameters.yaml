@@ -19,18 +19,17 @@ pushing_offset: 0 #-0.001
 # c3 parameters
 mu: 1                  # changes need to be consistent with urdf
 Q_default: 0
-Q_finger: 5000   # 500      # finger xyz cost           # APPROX： 500
-Q_ball_x: 500000 # 10000                              # APPROX： 1000000
-Q_ball_y: 500000 # 10000                              # APPROX： 1000000
-Q_ball_z: 500000 # 10000                              # APPROX： 1000000
-#Q_ball_z: 50000000 # 10000                              # APPROX： 1000000
-Q_finger_vel: 10        # 10 translational velocity cost
+Q_finger: 500   # 500      # finger xyz cost           # APPROX： 500
+Q_ball_x: 500000 # 10000  # old working 500000                # 500000 after issue fixed         # APPROX： 1000000
+Q_ball_y: 500000 # 10000  # old working 500000                # 500000 after issue fixed            # APPROX： 1000000
+Q_ball_z: 20000 # 10000                   # 20000 after issue fixed           # APPROX： 1000000
+Q_finger_vel: 1        # old working 10 translational velocity cost  # 1 after issue fixed
 Q_ball_vel: 0.1         # 0.1 angular & translational velocity cost
 Qnew_finger: 500    # 1000000  Qnew costs             # APPROX： 500
 Qnew_ball_x: 1                                         # APPROX： 1
 Qnew_ball_y: 1                                         # APPROX： 1
 R: 0.01                 # torque cost in xyz
-G: 0.01                 # 0.01
+G: 0.00001              # old working 0.01 # 0.00001 after issue fixed
 U_default: 1
 U_pos_vel: 10           # first 19 diag elements of U
 U_u: 1                # last 3 diag elements of U
@@ -82,8 +81,9 @@ ball_stddev: 0.00 # standard deviation of 0-mean noise on ball state estimation
 # gaiting parameters
 roll_phase: 1.5  #2.5                           # APPROX： 1.5 (realtime rate 1)
 return_phase: 0.5 #0.75                         # APPROX： 0.8 (realtime rate 1)
-gait_parameters: [0.025, 0.0921, 0.0891, 0.0701] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
+gait_parameters: [0.01, 0.0921, 0.0891, 0.0701] # [0.02, 0.0951, 0.0911, 0.0691] try playing with first param here
 # [0.025, 0.0921, 0.0891, 0.0701] work good for right and large model
+# [0.01, 0.0921, 0.0891, 0.0701] after issue fixed
 # gait parameters represent height above the table
 
 # filters
