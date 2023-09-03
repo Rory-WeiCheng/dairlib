@@ -519,6 +519,14 @@ VectorXd orientation_d = (rot * default_orientation).ToQuaternionAsVector4();
   std::vector<MatrixXd> Qha(Q_.size(), Qnew);
   std::vector<MatrixXd> Rha(R_.size(), Rnew);
 
+//  std::cout << "traj_desired[0] z" << traj_desired[0](9) << std::endl;
+//  std::cout << "traj_desired[1] z" << traj_desired[1](9) << std::endl;
+//  std::cout << "traj_desired[2] z" << traj_desired[2](9) << std::endl;
+//  std::cout << "traj_desired[3] z" << traj_desired[3](9) << std::endl;
+//  std::cout << "traj_desired[4] z" << traj_desired[4](9) << std::endl;
+//  std::cout << "traj_desired[5] z" << traj_desired[5](9) << std::endl;
+
+
   solvers::C3MIQP opt(system_, Qha, Rha, G_, U_, traj_desired, options,
     warm_start_delta_, warm_start_binary_, warm_start_x_,
     warm_start_lambda_, warm_start_u_, true);
