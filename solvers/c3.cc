@@ -152,11 +152,11 @@ VectorXd C3::Solve(VectorXd& x0, vector<VectorXd>& delta, vector<VectorXd>& w) {
   vector<VectorXd> zfin = SolveQP(x0, Gv, WD);
 
   z = zfin[0];
-//  std::cout << "zfin[0] x " << zfin[0](7) << " y " << zfin[0](8) << " z" << zfin[0](9) + 0.0038  - 0.0315 << std::endl;
-//  std::cout << "zfin[1] x " << zfin[1](7) << " y " << zfin[1](8) << " z" << zfin[1](9) + 0.0038  - 0.0315 << std::endl;
-//  std::cout << "zfin[2] x " << zfin[2](7) << " y " << zfin[2](8) << " z" << zfin[2](9) + 0.0038  - 0.0315 << std::endl;
-//  std::cout << "zfin[3] x " << zfin[3](7) << " y " << zfin[3](8) << " z" << zfin[3](9) + 0.0038  - 0.0315 << std::endl;
-//  std::cout << "zfin[4] x " << zfin[4](7) << " y " << zfin[4](8) << " z" << zfin[4](9) + 0.0038  - 0.0315 << std::endl;
+  std::cout << "zfin[0] x " << zfin[0](7) << " y " << zfin[0](8) << " z" << zfin[0](9) + 0.0038  - 0.0315 << std::endl;
+  std::cout << "zfin[1] x " << zfin[1](7) << " y " << zfin[1](8) << " z" << zfin[1](9) + 0.0038  - 0.0315 << std::endl;
+  std::cout << "zfin[2] x " << zfin[2](7) << " y " << zfin[2](8) << " z" << zfin[2](9) + 0.0038  - 0.0315 << std::endl;
+  std::cout << "zfin[3] x " << zfin[3](7) << " y " << zfin[3](8) << " z" << zfin[3](9) + 0.0038  - 0.0315 << std::endl;
+  std::cout << "zfin[4] x " << zfin[4](7) << " y " << zfin[4](8) << " z" << zfin[4](9) + 0.0038  - 0.0315 << std::endl;
 
 //    std::cout << "zfin[0] " << zfin[0]<< std::endl;
 //    std::cout << "zfin[1] " << zfin[1]<< std::endl;
